@@ -16,3 +16,9 @@ class PhoneNumber(models.Model):
 
     class Meta:
         abstract = True
+
+
+class Trainee(BaseUser):
+    phone_number = models.OneToOneField(PhoneNumber, on_delete=models.CASCADE)
+    height = models.FloatField()
+    weight = models.FloatField()
