@@ -6,7 +6,6 @@ class BaseUser(models.Model):
     last_name = models.CharField(max_length=250)
     age = models.IntegerField(null=True)
     email = models.EmailField(max_length=250, unique=True, null=True)
-    phone = models.OneToOneRel
 
     class Meta:
         abstract = True
