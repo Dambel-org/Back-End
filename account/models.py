@@ -17,3 +17,13 @@ class PhoneNumber(models.Model):
 
     class Meta:
         abstract = True
+
+
+class GymOwnerPhoneNumber(models.Model):
+    phone = models.OneToOneRel(PhoneNumber, on_delete=models.CASCADE, related_name='gym_owner_phone_number')
+    gym_owner = models.ForeignKey('GymOwner', on_delete=models.CASCADE, related_name='gym_owner')
+
+
+class GymOwner(models.Model):
+    user = models.OneToOneRel(BaseUser, on_delete=models.CASCADE, related_name='gym_owner')
+    license_number = models.CharField(max_length=64, unique=True)
