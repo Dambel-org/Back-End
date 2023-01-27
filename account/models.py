@@ -19,7 +19,4 @@ class PhoneNumber(models.Model):
 
 
 class Trainer(BaseUser):
-    phone_number = models.ForeignKey(PhoneNumber, unique=True, on_delete=models.CASCADE)
-
-    class Meta:
-        abstract = True
+    phone_number = models.OneToOneField(PhoneNumber, on_delete=models.CASCADE,primary_key=True)
