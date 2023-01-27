@@ -14,5 +14,9 @@ class BaseUser(models.Model):
 class PhoneNumber(models.Model):
     phone_number = models.CharField(max_length=11, unique=True)
 
-    class Meta:
-        abstract = True
+class GymOwnerPhoneNumber(PhoneNumber):
+    gym_owner = models.ForeignKey('GymOwner', on_delete=models.CASCADE, related_name='phone_number')
+
+
+class GymOwner(BaseUser):
+    license_number = models.CharField(max_length=64, unique=True)
