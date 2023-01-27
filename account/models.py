@@ -16,3 +16,10 @@ class PhoneNumber(models.Model):
 
     class Meta:
         abstract = True
+
+
+class Trainer(BaseUser):
+    phone_number = models.ForeignKey(PhoneNumber, unique=True, on_delete=models.CASCADE)
+
+    class Meta:
+        abstract = True
