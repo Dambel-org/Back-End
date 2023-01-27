@@ -15,15 +15,9 @@ class BaseUser(models.Model):
 class PhoneNumber(models.Model):
     phone_number = models.CharField(max_length=11)
 
-    class Meta:
-        abstract = True
+class GymOwnerPhoneNumber(PhoneNumber):
+    gym_owner = models.ForeignKey('GymOwner', on_delete=models.CASCADE, related_name='phone_number')
 
 
-class GymOwnerPhoneNumber(models.Model):
-    phone = models.OneToOneRel(PhoneNumber, on_delete=models.CASCADE, related_name='gym_owner_phone_number')
-    gym_owner = models.ForeignKey('GymOwner', on_delete=models.CASCADE, related_name='gym_owner')
-
-
-class GymOwner(models.Model):
-    user = models.OneToOneRel(BaseUser, on_delete=models.CASCADE, related_name='gym_owner')
+class GymOwner(BaseUser):
     license_number = models.CharField(max_length=64, unique=True)
