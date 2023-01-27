@@ -14,9 +14,6 @@ class BaseUser(models.Model):
 class PhoneNumber(models.Model):
     phone_number = models.CharField(max_length=11, unique=True)
 
-    class Meta:
-        abstract = True
-
 
 class Trainer(BaseUser):
     phone_number = models.OneToOneField(PhoneNumber, on_delete=models.CASCADE,primary_key=True)
