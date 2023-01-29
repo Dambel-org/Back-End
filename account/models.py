@@ -16,7 +16,7 @@ class PhoneNumber(models.Model):
 
 
 class Trainer(BaseUser):
-    phone_number = models.OneToOneField(PhoneNumber, on_delete=models.CASCADE, unique=True)
+    phone_number = models.OneToOneField(PhoneNumber, on_delete=models.CASCADE)
 
 
 class Trainee(BaseUser):
