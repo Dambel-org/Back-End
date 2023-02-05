@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 
+from gym.models import Gym
+
 
 class BaseUserManager(UserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -65,3 +67,21 @@ class GymOwner(models.Model):
     class Meta:
         verbose_name = 'Gym Owner'
         verbose_name_plural = 'Gym Owners'
+
+
+class TrainerPreRegistration(models.Model):
+    gym = models.ForeignKey(Gym, on_delete=models.CASCADE)
+    trainer = models.ForeignKey(Trainer, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['gym', 'trainer']
+
+
+class TraineePreRegistration(models.Model):
+    gym = models.ForeignKey(Gym, on_delete=models.CASCADE)
+    trainee = models.ForeignKey(Trainee, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['gym', 'trainee']
