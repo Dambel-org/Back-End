@@ -45,7 +45,6 @@ class Trainer(models.Model):
 
 class Trainee(models.Model):
     user = models.OneToOneField(BaseUser, on_delete=models.CASCADE)
-    phone_number = models.OneToOneField(PhoneNumber, on_delete=models.CASCADE)
     height = models.FloatField()
     weight = models.FloatField()
 
@@ -56,6 +55,10 @@ class Trainee(models.Model):
 
 class GymOwnerPhoneNumber(PhoneNumber):
     gym_owner = models.ForeignKey('GymOwner', on_delete=models.CASCADE, related_name='phone_number')
+
+
+class TraineePhoneNumber(PhoneNumber):
+    trainee = models.ForeignKey('Trainee', on_delete=models.CASCADE, related_name='phone_number')
 
 
 class GymOwner(models.Model):
