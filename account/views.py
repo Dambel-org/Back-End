@@ -1,6 +1,7 @@
 from rest_framework.generics import CreateAPIView
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .serializers import *
 
 
@@ -18,4 +19,4 @@ class SignUpGymOwnerView(CreateAPIView):
 
 class LoginGymOwnerView(TokenObtainPairView):
     queryset = GymOwner.objects.all()
-    serializer_class = LoginGymOwnerSerializer
+    serializer_class = TokenObtainPairSerializer
