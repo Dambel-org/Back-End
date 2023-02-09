@@ -1,4 +1,5 @@
 from django.contrib.auth.models import update_last_login
+from django.db import transaction
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -36,6 +37,7 @@ class SignupGymOwnerSerializer(serializers.ModelSerializer):
         model = GymOwner
         fields = ('user', 'license_number', 'phone_number')
 
+    @transaction.atomic()
     def create(self, validated_data):
         user = validated_data.pop('user')
         number = validated_data.pop('phone_number')
@@ -46,14 +48,14 @@ class SignupGymOwnerSerializer(serializers.ModelSerializer):
         return gym_owner
 
 
-class LoginGymOwnerSerializer(TokenObtainPairSerializer):
-    def validate(self, attrs):
-        data = super().validate(attrs)
-        refresh = self.get_token(self.user)
-
-        data['refresh'] = str(refresh)
-        data['access'] = str(refresh.access_token)
-
-        update_last_login(None, self.user)
-
-        return data
+# class LoginGymOwnerSerializer(TokenObtainPairSerializer):
+#     def validate(self, attrs):
+#         data = super().validate(attrs)
+#         refresh = self.get_token(self.user)
+#
+#         data['refresh'] = str(refresh)
+#         data['access'] = str(refresh.access_token)
+#
+#         update_last_login(None, self.user)
+#
+#         return data
