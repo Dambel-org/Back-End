@@ -3,7 +3,7 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 
 from account.models import *
-from gym.models import TraineePreRegistration, TrainerPreRegistration, GymTrainee
+from gym.models import TraineePreRegistration, TrainerPreRegistration, GymTrainee, GymTrainer
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -86,3 +86,12 @@ class TrainerPreRegistrationSerializer(serializers.ModelSerializer):
         trainer = Trainer.objects.create(user=user, phone_number=phone_number)
         pre_reg = TrainerPreRegistration.objects.create(trainer=trainer, gym_id=self.context['gym_id'])
         return pre_reg
+
+
+class GymTrainerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GymTrainer
+        fields = "__all__"
+
+    def create(self, validated_data):
+        return GymTrainer.objects.create(**validated_data)
