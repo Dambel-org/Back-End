@@ -17,7 +17,7 @@ class TraineeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Trainee
-        fields = ('user', 'height', 'weight')
+        fields = ('id', 'user', 'height', 'weight')
 
     def create(self, validated_data):
         user = validated_data['user']
@@ -28,7 +28,7 @@ class TraineePreRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TraineePreRegistration
-        fields = ('trainee',)
+        fields = ('trainee', 'gym')
 
     @transaction.atomic()
     def create(self, validated_data):
@@ -44,10 +44,12 @@ class TraineePreRegistrationSerializer(serializers.ModelSerializer):
         return pre_reg
 
 
-class GymTraineeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = GymTrainee
-        fields = "__all__"
+class GymTraineeSerializer(serializers.Serializer):
 
+    @transaction.atomic()
     def create(self, validated_data):
-        return GymTrainee.objects.create(**validated_data)
+        gym_id = self.context['gym_id']
+        trainee_id = self.context['trainee_id']
+        TraineePreRegistration.objects.get(gym_id=gym_id, trainee_id=trainee_id).delete()
+        gym_trainee = GymTrainee.objects.create(gym_id=gym_id, trainee_id=trainee_id)
+        return gym_trainee
