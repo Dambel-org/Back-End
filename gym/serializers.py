@@ -19,9 +19,6 @@ class TraineeSerializer(serializers.ModelSerializer):
         model = Trainee
         fields = ('user', 'height', 'weight')
 
-    def create(self, validated_data):
-        user = validated_data['user']
-
 
 class TraineePreRegistrationSerializer(serializers.ModelSerializer):
     trainee = TraineeSerializer()
