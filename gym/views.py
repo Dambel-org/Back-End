@@ -23,7 +23,7 @@ class TraineePreRegistrationView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             self.perform_create(serializer)
-            return Response({'trainee pre register created!'}, status=status.HTTP_201_CREATED)
+            return Response({'trainee pre-registration created!'}, status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
