@@ -4,20 +4,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from account.models import Trainee
+from account.models import Trainee, GymOwner
 from gym.models import TraineePreRegistration
+from gym.permissions import IsGymOwner
 from gym.serializers import TraineePreRegistrationSerializer, GymTraineeSerializer
-
-
-# class TraineePreRegisterCreateView(CreateAPIView):
-#     serializer_class = TraineePreRegistrationSerializer
-#
-#     def create(self, request, *args, **kwargs):
-#         serializer = self.get_serializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         self.perform_create(serializer)
-#         headers = self.get_success_headers(serializer.data)
-#         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class TraineePreRegistrationView(generics.CreateAPIView):
@@ -37,10 +27,22 @@ class TraineePreRegistrationView(generics.CreateAPIView):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-class TraineePreRegistrationSubmitView(APIView):
-    def __get__(self, request, pk):
-        trainee_pre_reg = TraineePreRegistration.objects.get(pk=pk)
-        trainee_pre_reg.delete()
-        serializer = GymTraineeSerializer(trainee_pre_reg)
-        serializer.is_valid(raise_exception=True)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+class GymPreRegistrationListView(generics.ListAPIView):
+    serializer_class = TraineePreRegistrationSerializer
+    permission_classes = [IsGymOwner, ]
+
+    def get_queryset(self):
+        user = self.request.user
+        gym_owner = GymOwner.objects.get(user=user)
+        return TraineePreRegistration.objects.filter(gym__gym_owner=gym_owner)
+
+
+# class TraineePreRegistrationSubmitView(generics.CreateAPIView):
+#     serializer_class = GymTraineeSerializer
+#
+#     def post(self, request, *args, **kwargs):
+#         serializer = self.get_serializer(data=request.data)
+#         if serializer.is_valid():
+#             self.perform_create(serializer)
+#             return Response({'trainee registration completed successfully!'}, status=status.HTTP_201_CREATED)
+#         return Response(status=status.HTTP_400_BAD_REQUEST)
