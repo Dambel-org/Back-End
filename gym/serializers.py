@@ -3,13 +3,13 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 
 from account.models import *
-from gym.models import TraineePreRegistration, GymTrainee
+from gym.models import TraineePreRegistration, GymTrainee, Gym
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = BaseUser
-        fields = ('first_name', 'last_name', 'email', 'password',)
+        fields = ('first_name', 'last_name')
 
 
 class TraineeSerializer(serializers.ModelSerializer):
@@ -17,7 +17,7 @@ class TraineeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Trainee
-        fields = ('user', 'height', 'weight')
+        fields = ('id', 'user', 'height', 'weight')
 
     def create(self, validated_data):
         user = validated_data['user']
@@ -28,7 +28,7 @@ class TraineePreRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TraineePreRegistration
-        fields = ('trainee',)
+        fields = ('trainee', 'gym')
 
     @transaction.atomic()
     def create(self, validated_data):
@@ -44,10 +44,28 @@ class TraineePreRegistrationSerializer(serializers.ModelSerializer):
         return pre_reg
 
 
-class GymTraineeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = GymTrainee
-        fields = "__all__"
+class GymTraineeSerializer(serializers.Serializer):
 
+    @transaction.atomic()
     def create(self, validated_data):
-        return GymTrainee.objects.create(**validated_data)
+        gym_id = self.context['gym_id']
+        trainee_id = self.context['trainee_id']
+        TraineePreRegistration.objects.get(gym_id=gym_id, trainee_id=trainee_id).delete()
+        gym_trainee = GymTrainee.objects.create(gym_id=gym_id, trainee_id=trainee_id)
+        return gym_trainee
+
+
+class GymOwnerSerializer(serializers.ModelSerializer):
+
+    user = UserSerializer()
+    class Meta:
+        model = GymOwner
+        fields = '__all__'
+
+
+class GymSerializer(serializers.ModelSerializer):
+    gym_owner = GymOwnerSerializer()
+
+    class Meta:
+        model = Gym
+        fields = ('name', 'description', 'gym_owner')
