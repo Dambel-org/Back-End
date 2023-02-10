@@ -7,7 +7,7 @@ from rest_framework import status
 from account.models import Trainee, GymOwner
 from gym.models import TraineePreRegistration, Gym
 from gym.permissions import IsGymOwner
-from gym.serializers import TraineePreRegistrationSerializer, GymTraineeSerializer
+from gym.serializers import *
 
 
 class TraineePreRegistrationCreateView(generics.CreateAPIView):
@@ -54,3 +54,17 @@ class SubmitTraineePreRegistrationView(generics.CreateAPIView):
             self.perform_create(serializer)
             return Response({'trainee registration completed successfully!'}, status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class GymListView(generics.ListAPIView):
+    queryset = Gym.objects.all()
+    serializer_class = GymSerializer
+
+
+class GymDetailView(generics.RetrieveAPIView):
+    queryset = Gym.objects.all()
+    serializer_class = GymSerializer
+    lookup_field = 'gym_id'
+
+    def get_object(self):
+        return self.get_queryset().get(pk=self.kwargs['gym_id'])

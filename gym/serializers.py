@@ -3,13 +3,13 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 
 from account.models import *
-from gym.models import TraineePreRegistration, GymTrainee
+from gym.models import TraineePreRegistration, GymTrainee, Gym
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = BaseUser
-        fields = ('first_name', 'last_name', 'email', 'password',)
+        fields = ('first_name', 'last_name')
 
 
 class TraineeSerializer(serializers.ModelSerializer):
@@ -53,3 +53,19 @@ class GymTraineeSerializer(serializers.Serializer):
         TraineePreRegistration.objects.get(gym_id=gym_id, trainee_id=trainee_id).delete()
         gym_trainee = GymTrainee.objects.create(gym_id=gym_id, trainee_id=trainee_id)
         return gym_trainee
+
+
+class GymOwnerSerializer(serializers.ModelSerializer):
+
+    user = UserSerializer()
+    class Meta:
+        model = GymOwner
+        fields = '__all__'
+
+
+class GymSerializer(serializers.ModelSerializer):
+    gym_owner = GymOwnerSerializer()
+
+    class Meta:
+        model = Gym
+        fields = ('name', 'description', 'gym_owner')
