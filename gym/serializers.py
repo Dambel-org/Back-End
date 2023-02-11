@@ -3,13 +3,15 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 
 from account.models import *
-from gym.models import TraineePreRegistration, TrainerPreRegistration, GymTrainee, GymTrainer
+
+from gym.models import TraineePreRegistration, GymTrainee, Gym
+
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = BaseUser
-        fields = ('first_name', 'last_name', 'email', 'password',)
+        fields = ('first_name', 'last_name')
 
 
 class TraineeSerializer(serializers.ModelSerializer):
@@ -17,7 +19,7 @@ class TraineeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Trainee
-        fields = ('user', 'height', 'weight')
+        fields = ('id', 'user', 'height', 'weight')
 
 
 class TraineePreRegistrationSerializer(serializers.ModelSerializer):
@@ -25,7 +27,7 @@ class TraineePreRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TraineePreRegistration
-        fields = ('trainee',)
+        fields = ('trainee', 'gym')
 
     @transaction.atomic()
     def create(self, validated_data):
@@ -41,54 +43,29 @@ class TraineePreRegistrationSerializer(serializers.ModelSerializer):
         return pre_reg
 
 
-class GymTraineeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = GymTrainee
-        fields = "__all__"
-
-    def create(self, validated_data):
-        return GymTrainee.objects.create(**validated_data)
-
-
-class PhoneNumberSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PhoneNumber
-        fields = ('number', )
-
-
-class TrainerSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
-    phone_number = PhoneNumberSerializer()
-
-    class Meta:
-        model = Trainer
-        fields = ('user', 'phone_number', )
-
-
-class TrainerPreRegistrationSerializer(serializers.ModelSerializer):
-    trainer = TrainerSerializer()
-
-    class Meta:
-        model = TrainerPreRegistration
-        fields = ('trainer', )
+class GymTraineeSerializer(serializers.Serializer):
 
     @transaction.atomic()
     def create(self, validated_data):
-        first_name = validated_data.get('trainer').get('user').get('first_name')
-        last_name = validated_data.get('trainer').get('user').get('last_name')
-        email = validated_data.get('trainer').get('user').get('email')
-        password = validated_data.get('trainer').get('user').get('password')
-        phone_number = validated_data.get('trainer').get('phone_number')
-        user = BaseUser.objects.create_user(email=email, password=password, first_name=first_name, last_name=last_name)
-        trainer = Trainer.objects.create(user=user, phone_number=phone_number)
-        pre_reg = TrainerPreRegistration.objects.create(trainer=trainer, gym_id=self.context['gym_id'])
-        return pre_reg
+
+        gym_id = self.context['gym_id']
+        trainee_id = self.context['trainee_id']
+        TraineePreRegistration.objects.get(gym_id=gym_id, trainee_id=trainee_id).delete()
+        gym_trainee = GymTrainee.objects.create(gym_id=gym_id, trainee_id=trainee_id)
+        return gym_trainee
 
 
-class GymTrainerSerializer(serializers.ModelSerializer):
+class GymOwnerSerializer(serializers.ModelSerializer):
+
+    user = UserSerializer()
     class Meta:
-        model = GymTrainer
-        fields = "__all__"
+        model = GymOwner
+        fields = '__all__'
 
-    def create(self, validated_data):
-        return GymTrainer.objects.create(**validated_data)
+
+class GymSerializer(serializers.ModelSerializer):
+    gym_owner = GymOwnerSerializer()
+
+    class Meta:
+        model = Gym
+        fields = ('name', 'description', 'gym_owner')

@@ -5,12 +5,14 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from account.models import Trainee, GymOwner
-from gym.models import TraineePreRegistration
+from gym.models import TraineePreRegistration, Gym
 from gym.permissions import IsGymOwner
-from gym.serializers import TraineePreRegistrationSerializer, GymTraineeSerializer, TrainerPreRegistrationSerializer
+
+from gym.serializers import *
 
 
-class TraineePreRegistrationView(generics.CreateAPIView):
+
+class TraineePreRegistrationCreateView(generics.CreateAPIView):
     serializer_class = TraineePreRegistrationSerializer
     lookup_field = ['gym_id']
 
@@ -27,7 +29,7 @@ class TraineePreRegistrationView(generics.CreateAPIView):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-class GymPreRegistrationListView(generics.ListAPIView):
+class TraineePreRegistrationListView(generics.ListAPIView):
     serializer_class = TraineePreRegistrationSerializer
     permission_classes = [IsGymOwner, ]
 
@@ -37,29 +39,37 @@ class GymPreRegistrationListView(generics.ListAPIView):
         return TraineePreRegistration.objects.filter(gym__gym_owner=gym_owner)
 
 
-# class TraineePreRegistrationSubmitView(generics.CreateAPIView):
-#     serializer_class = GymTraineeSerializer
-#
-#     def post(self, request, *args, **kwargs):
-#         serializer = self.get_serializer(data=request.data)
-#         if serializer.is_valid():
-#             self.perform_create(serializer)
-#             return Response({'trainee registration completed successfully!'}, status=status.HTTP_201_CREATED)
-#         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-
-class TrainerPreRegistrationView(generics.CreateAPIView):
-    serializer_class = TrainerPreRegistrationSerializer
-    lookup_field = ['gym_id']
+class SubmitTraineePreRegistrationView(generics.CreateAPIView):
+    serializer_class = GymTraineeSerializer
+    lookup_field = ['gym_id', 'trainee_id']
+    permission_classes = [IsGymOwner, ]
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context.update({"gym_id": self.kwargs['gym_id']})
+        context.update({"gym_id": self.kwargs['gym_id'],
+                        "trainee_id": self.kwargs['trainee_id']})
+
         return context
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             self.perform_create(serializer)
-            return Response({'trainer pre-registration created!'}, status=status.HTTP_201_CREATED)
+            return Response({'trainee registration completed successfully!'}, status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class GymListView(generics.ListAPIView):
+    queryset = Gym.objects.all()
+    serializer_class = GymSerializer
+
+
+class GymDetailView(generics.RetrieveAPIView):
+    queryset = Gym.objects.all()
+    serializer_class = GymSerializer
+    lookup_field = 'gym_id'
+
+    def get_object(self):
+        return self.get_queryset().get(pk=self.kwargs['gym_id'])
+
