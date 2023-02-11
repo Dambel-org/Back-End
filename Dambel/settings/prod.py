@@ -1,8 +1,11 @@
+import os.path
+
 from .common import *
+import os
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
-ALLOWED_HOSTS = env('ALLOWED_HOST')
+ALLOWED_HOSTS = env('ALLOWED_HOSTS').split()
 DEBUG = True
 DATABASES = {
     'default': {
@@ -14,4 +17,4 @@ DATABASES = {
     }
 }
 
-STATIC_ROOT = 'static'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
