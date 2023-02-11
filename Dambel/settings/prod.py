@@ -1,4 +1,4 @@
-from common import *
+from .common import *
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
@@ -14,4 +14,4 @@ DATABASES = {
     }
 }
 
-
+STATIC_ROOT = 'static'
