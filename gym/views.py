@@ -56,6 +56,12 @@ class SubmitTraineePreRegistrationView(generics.CreateAPIView):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+class GymCreateView(generics.CreateAPIView):
+    queryset = Gym.objects.all()
+    permission_classes = [IsGymOwner]
+    serializer_class = CreateGymSerializer
+
+
 class GymListView(generics.ListAPIView):
     queryset = Gym.objects.all()
     serializer_class = GymSerializer

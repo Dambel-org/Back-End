@@ -3,7 +3,7 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 
 from account.models import *
-from gym.models import TraineePreRegistration, GymTrainee, Gym
+from gym.models import TraineePreRegistration, GymTrainee, Gym, City, Province
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -56,16 +56,45 @@ class GymTraineeSerializer(serializers.Serializer):
 
 
 class GymOwnerSerializer(serializers.ModelSerializer):
-
     user = UserSerializer()
+
     class Meta:
         model = GymOwner
         fields = '__all__'
 
 
+class ProvinceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Province
+        fields = '__all__'
+
+
+class CitySerializer(serializers.ModelSerializer):
+    province = ProvinceSerializer()
+
+    class Meta:
+        model = City
+        fields = '__all__'
+
+
 class GymSerializer(serializers.ModelSerializer):
-    gym_owner = GymOwnerSerializer()
+    gym_owner = GymOwnerSerializer(read_only=True)
+    city = CitySerializer(read_only=True)
 
     class Meta:
         model = Gym
-        fields = ('name', 'description', 'gym_owner')
+        fields = ('name', 'description', 'gym_owner', 'city', 'address')
+
+
+class CreateGymSerializer(serializers.ModelSerializer):
+    city_id = serializers.IntegerField()
+
+    class Meta:
+        model = Gym
+        fields = ('name', 'description', 'city_id', 'address')
+
+    def create(self, validated_data):
+        city = City.objects.get(pk=validated_data.pop('city_id'))
+        gym_owner = GymOwner.objects.get(user=self.context['request'].user)
+        gym = Gym.objects.create(gym_owner=gym_owner, city=city, **validated_data)
+        return gym
