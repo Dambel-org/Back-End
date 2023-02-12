@@ -63,18 +63,18 @@ class GymOwnerSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ProvinceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Province
-        fields = '__all__'
-
-
 class CitySerializer(serializers.ModelSerializer):
-    province = ProvinceSerializer()
-
     class Meta:
         model = City
-        fields = '__all__'
+        fields = ('id', 'name')
+
+
+class ProvinceSerializer(serializers.ModelSerializer):
+    city = CitySerializer(many=True)
+
+    class Meta:
+        model = Province
+        fields = ('id', 'name', 'city')
 
 
 class GymSerializer(serializers.ModelSerializer):

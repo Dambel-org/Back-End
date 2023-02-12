@@ -9,5 +9,7 @@ urlpatterns = [
          name='trainee-pre-reg-submit'),
     path('list/', GymListView.as_view(), name='gym-list'),
     path('detail/<int:gym_id>/', GymDetailView.as_view(), name='gym-detail'),
-    path('create/', GymCreateView.as_view(), name='gym-create')
+    path('create/', GymCreateView.as_view(), name='gym-create'),
+    path('provinces/', ProvinceListView.as_view(), name='province-list'),
+    path('provinces/<int:province_id>/', ProvinceDetailView.as_view(), name='province-detail')
 ]

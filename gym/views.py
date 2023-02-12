@@ -74,3 +74,17 @@ class GymDetailView(generics.RetrieveAPIView):
 
     def get_object(self):
         return self.get_queryset().get(pk=self.kwargs['gym_id'])
+
+
+class ProvinceListView(generics.ListAPIView):
+    queryset = Province.objects.all()
+    serializer_class = ProvinceSerializer
+
+
+class ProvinceDetailView(generics.RetrieveAPIView):
+    queryset = Province.objects.all()
+    serializer_class = ProvinceSerializer
+    lookup_field = ['province_id']
+
+    def get_object(self):
+        return self.get_queryset().get(pk=self.kwargs['province_id'])
