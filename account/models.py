@@ -63,7 +63,7 @@ class TraineePhoneNumber(PhoneNumber):
 
 class GymOwner(models.Model):
     user = models.OneToOneField(BaseUser, on_delete=models.CASCADE)
-    license_number = models.CharField(max_length=64, unique=True, blank=True , null=True)
+    license_number = models.CharField(max_length=64, unique=True, blank=True, null=True)
 
     class Meta:
         verbose_name = 'Gym Owner'

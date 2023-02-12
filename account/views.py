@@ -6,7 +6,7 @@ from .serializers import *
 
 
 class SignUpGymOwnerView(CreateAPIView):
-    queryset = GymOwner.objects.all()
+    queryset = BaseUser.objects.all()
     serializer_class = SignupGymOwnerSerializer
 
     def create(self, request, *args, **kwargs):
@@ -17,6 +17,30 @@ class SignUpGymOwnerView(CreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class LoginGymOwnerView(TokenObtainPairView):
-    queryset = GymOwner.objects.all()
-    serializer_class = TokenObtainPairSerializer
+class SignUpTraineeView(CreateAPIView):
+    queryset = Trainee.objects.all()
+    serializer_class = SignupTraineeSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class SignUpTrainerView(CreateAPIView):
+    queryset = Trainer.objects.all()
+    serializer_class = SignUpTrainerSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class LoginView(TokenObtainPairView):
+    queryset = BaseUser.objects.all()
+    serializer_class = MyTokenObtainPairSerializer
