@@ -9,16 +9,11 @@ from .models import *
 
 
 class BaseUserSerializer(serializers.ModelSerializer):
-    conf_password = serializers.CharField(max_length=250, write_only=True)
-
     class Meta:
         model = BaseUser
-        fields = ('email', 'first_name', 'last_name', 'age', 'password', 'conf_password')
+        fields = ('first_name', 'last_name', 'email', 'password')
 
     def create(self, validated_data):
-        if validated_data['password'] != validated_data['conf_password']:
-            raise serializers.ValidationError('Passwords do not match')
-        conf_password = validated_data.pop('conf_password')
         user = BaseUser.objects.create_user(**validated_data)
         return user
 
@@ -35,7 +30,7 @@ class SignupGymOwnerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GymOwner
-        fields = ('user', 'license_number', 'phone_number')
+        fields = ('user', 'phone_number')
 
     @transaction.atomic()
     def create(self, validated_data):
@@ -46,16 +41,3 @@ class SignupGymOwnerSerializer(serializers.ModelSerializer):
         gym_owner = GymOwner.objects.create(user=user, **validated_data)
         GymOwnerPhoneNumber.objects.create(gym_owner=gym_owner, number=number)
         return gym_owner
-
-
-# class LoginGymOwnerSerializer(TokenObtainPairSerializer):
-#     def validate(self, attrs):
-#         data = super().validate(attrs)
-#         refresh = self.get_token(self.user)
-#
-#         data['refresh'] = str(refresh)
-#         data['access'] = str(refresh.access_token)
-#
-#         update_last_login(None, self.user)
-#
-#         return data
