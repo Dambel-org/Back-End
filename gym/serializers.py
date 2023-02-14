@@ -96,5 +96,6 @@ class CreateGymSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         city = City.objects.get(pk=validated_data.pop('city_id'))
         gym_owner = GymOwner.objects.get(user=self.context['request'].user)
+        print(validated_data)
         gym = Gym.objects.create(gym_owner=gym_owner, city=city, **validated_data)
         return gym

@@ -58,7 +58,7 @@ class SubmitTraineePreRegistrationView(generics.CreateAPIView):
 
 class GymCreateView(generics.CreateAPIView):
     queryset = Gym.objects.all()
-    permission_classes = [IsGymOwner]
+    # permission_classes = [IsGymOwner]
     serializer_class = CreateGymSerializer
 
 
