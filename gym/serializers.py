@@ -3,7 +3,9 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 
 from account.models import *
+
 from gym.models import TraineePreRegistration, GymTrainee, Gym, City, Province
+
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -18,9 +20,6 @@ class TraineeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trainee
         fields = ('id', 'user', 'height', 'weight')
-
-    def create(self, validated_data):
-        user = validated_data['user']
 
 
 class TraineePreRegistrationSerializer(serializers.ModelSerializer):
@@ -48,6 +47,7 @@ class GymTraineeSerializer(serializers.Serializer):
 
     @transaction.atomic()
     def create(self, validated_data):
+
         gym_id = self.context['gym_id']
         trainee_id = self.context['trainee_id']
         TraineePreRegistration.objects.get(gym_id=gym_id, trainee_id=trainee_id).delete()

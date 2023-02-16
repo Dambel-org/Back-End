@@ -7,7 +7,9 @@ from rest_framework import status
 from account.models import Trainee, GymOwner
 from gym.models import TraineePreRegistration, Gym
 from gym.permissions import IsGymOwner
+
 from gym.serializers import *
+
 
 
 class TraineePreRegistrationCreateView(generics.CreateAPIView):
@@ -23,7 +25,7 @@ class TraineePreRegistrationCreateView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             self.perform_create(serializer)
-            return Response({'trainee pre register created!'}, status=status.HTTP_201_CREATED)
+            return Response({'trainee pre-registration created!'}, status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -37,6 +39,7 @@ class TraineePreRegistrationListView(generics.ListAPIView):
         return TraineePreRegistration.objects.filter(gym__gym_owner=gym_owner)
 
 
+
 class SubmitTraineePreRegistrationView(generics.CreateAPIView):
     serializer_class = GymTraineeSerializer
     lookup_field = ['gym_id', 'trainee_id']
@@ -46,6 +49,7 @@ class SubmitTraineePreRegistrationView(generics.CreateAPIView):
         context = super().get_serializer_context()
         context.update({"gym_id": self.kwargs['gym_id'],
                         "trainee_id": self.kwargs['trainee_id']})
+
         return context
 
     def post(self, request, *args, **kwargs):
@@ -74,6 +78,7 @@ class GymDetailView(generics.RetrieveAPIView):
 
     def get_object(self):
         return self.get_queryset().get(pk=self.kwargs['gym_id'])
+
 
 
 class ProvinceListView(generics.ListAPIView):
