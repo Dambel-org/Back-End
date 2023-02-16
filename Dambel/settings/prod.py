@@ -1,8 +1,15 @@
-from common import *
+from .common import *
+import os
 
+import environ
+
+# Initialise environment variables
+env = environ.Env()
+environ.Env.read_env()
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
-ALLOWED_HOSTS = env('ALLOWED_HOST')
+CORS_ORIGIN_ALLOW_ALL = True
+ALLOWED_HOSTS = env('ALLOWED_HOSTS').split()
 DEBUG = True
 DATABASES = {
     'default': {
@@ -14,4 +21,4 @@ DATABASES = {
     }
 }
 
-
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
