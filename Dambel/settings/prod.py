@@ -10,7 +10,7 @@ environ.Env.read_env()
 SECRET_KEY = env('SECRET_KEY')
 CORS_ORIGIN_ALLOW_ALL = True
 ALLOWED_HOSTS = env('ALLOWED_HOSTS').split()
-DEBUG = True
+DEBUG = False
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
