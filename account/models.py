@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
+from gym.models import Province, City
 
 
 class BaseUserManager(UserManager):
@@ -22,21 +23,25 @@ class BaseUserManager(UserManager):
 class BaseUser(AbstractUser):
     first_name = models.CharField(max_length=250)
     last_name = models.CharField(max_length=250)
-    age = models.IntegerField(null=True)
     email = models.EmailField(max_length=250, unique=True, null=True)
-    objects = BaseUserManager()
+    province = models.ForeignKey(Province, on_delete=models.SET_NULL)
+    city = models.ForeignKey(City, on_delete=models.SET_NULL)
+
     username = None
-    REQUIRED_FIELDS = ['first_name', 'last_name', 'age']
+    REQUIRED_FIELDS = ['first_name', 'last_name', 'age', 'password']
     USERNAME_FIELD = 'email'
 
+    objects = BaseUserManager()
 
-class PhoneNumber(models.Model):
-    number = models.CharField(max_length=11, unique=True)
+    def save(self, *args, **kwargs):
+        if self.city:
+            self.province = self.city.province
+        super(BaseUser, self).save(*args, **kwargs)
 
 
 class Trainer(models.Model):
     user = models.OneToOneField(BaseUser, on_delete=models.CASCADE, related_name='trainer')
-    phone_number = models.OneToOneField(PhoneNumber, on_delete=models.CASCADE)
+    age = models.IntegerField(null=True)
 
     class Meta:
         verbose_name = 'Trainer'
@@ -45,6 +50,7 @@ class Trainer(models.Model):
 
 class Trainee(models.Model):
     user = models.OneToOneField(BaseUser, on_delete=models.CASCADE)
+    age = models.IntegerField(null=True)
     height = models.FloatField()
     weight = models.FloatField()
 
@@ -53,17 +59,11 @@ class Trainee(models.Model):
         verbose_name_plural = 'Trainees'
 
 
-class GymOwnerPhoneNumber(PhoneNumber):
-    gym_owner = models.ForeignKey('GymOwner', on_delete=models.CASCADE, related_name='phone_number')
-
-
-class TraineePhoneNumber(PhoneNumber):
-    trainee = models.ForeignKey('Trainee', on_delete=models.CASCADE, related_name='phone_number')
-
-
 class GymOwner(models.Model):
     user = models.OneToOneField(BaseUser, on_delete=models.CASCADE)
-    license_number = models.CharField(max_length=64, unique=True, blank=True, null=True)
+    # TODO validation for phone number
+    phone_number = models.CharField(max_length=11)
+    address = models.TextField()
 
     class Meta:
         verbose_name = 'Gym Owner'
