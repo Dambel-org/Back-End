@@ -22,3 +22,8 @@ DATABASES = {
 }
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+SIMPLE_JWT = {
+    'AUTH_HEADER_TYPES': ('JWT',),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+}

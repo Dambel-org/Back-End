@@ -7,7 +7,6 @@ from account.models import *
 from gym.models import TraineePreRegistration, GymTrainee, Gym, City, Province
 
 
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = BaseUser
@@ -47,7 +46,6 @@ class GymTraineeSerializer(serializers.Serializer):
 
     @transaction.atomic()
     def create(self, validated_data):
-
         gym_id = self.context['gym_id']
         trainee_id = self.context['trainee_id']
         TraineePreRegistration.objects.get(gym_id=gym_id, trainee_id=trainee_id).delete()
@@ -83,7 +81,7 @@ class GymSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Gym
-        fields = ('name', 'description', 'gym_owner', 'city', 'address')
+        fields = ('name', 'logo_image', 'background_image', 'description', 'gym_owner', 'city', 'contacts')
 
 
 class CreateGymSerializer(serializers.ModelSerializer):
@@ -91,11 +89,10 @@ class CreateGymSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Gym
-        fields = ('name', 'description', 'city_id', 'address')
+        fields = ('name', 'logo_image', 'background_image', 'description', 'city_id', 'contacts')
 
     def create(self, validated_data):
         city = City.objects.get(pk=validated_data.pop('city_id'))
         gym_owner = GymOwner.objects.get(user=self.context['request'].user)
-        print(validated_data)
         gym = Gym.objects.create(gym_owner=gym_owner, city=city, **validated_data)
         return gym

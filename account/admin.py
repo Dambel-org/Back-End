@@ -11,3 +11,8 @@ class BaseUserAdmin(admin.ModelAdmin):
 @admin.register(Trainee)
 class TraineeAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(GymOwner)
+class TraineeAdmin(admin.ModelAdmin):
+    pass
