@@ -4,7 +4,7 @@ from rest_framework.response import Response
 
 from account.models import *
 
-from gym.models import TraineePreRegistration, GymTrainee, Gym, City, Province
+from gym.models import TraineePreRegistration, GymTrainee, Gym, City, Province, MapLocation
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -75,6 +75,12 @@ class ProvinceSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'city')
 
 
+class MapLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MapLocation
+        fields = "__all__"
+
+
 class GymSerializer(serializers.ModelSerializer):
     gym_owner = GymOwnerSerializer(read_only=True)
     city = CitySerializer(read_only=True)
@@ -86,10 +92,10 @@ class GymSerializer(serializers.ModelSerializer):
 
 class CreateGymSerializer(serializers.ModelSerializer):
     city_id = serializers.IntegerField()
-
+    map_location = MapLocationSerializer()
     class Meta:
         model = Gym
-        fields = ('name', 'logo_image', 'background_image', 'description', 'city_id', 'contacts')
+        fields = ('name', 'logo_image', 'background_image', 'description', 'city_id', 'contacts', 'map_location')
 
     def create(self, validated_data):
         city = City.objects.get(pk=validated_data.pop('city_id'))
