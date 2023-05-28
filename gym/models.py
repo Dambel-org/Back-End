@@ -52,3 +52,13 @@ class GymTrainer(models.Model):
 
     class Meta:
         unique_together = ['gym', 'trainer']
+
+
+class Invitation(models.Model):
+    gym = models.ForeignKey(Gym, on_delete=models.CASCADE)
+    trainer = models.ForeignKey(Trainer, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['gym', 'trainer']
+

@@ -1,11 +1,12 @@
+from abc import ABC
+
 from django.db import transaction
 from rest_framework import serializers, status
 from rest_framework.response import Response
 
 from account.models import *
 
-from gym.models import TraineePreRegistration, GymTrainee, Gym, City, Province
-
+from gym.models import TraineePreRegistration, GymTrainee, Gym, City, Province, Invitation, GymTrainer
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -47,7 +48,6 @@ class GymTraineeSerializer(serializers.Serializer):
 
     @transaction.atomic()
     def create(self, validated_data):
-
         gym_id = self.context['gym_id']
         trainee_id = self.context['trainee_id']
         TraineePreRegistration.objects.get(gym_id=gym_id, trainee_id=trainee_id).delete()
@@ -99,3 +99,29 @@ class CreateGymSerializer(serializers.ModelSerializer):
         print(validated_data)
         gym = Gym.objects.create(gym_owner=gym_owner, city=city, **validated_data)
         return gym
+
+
+class InviteSerializer(serializers.ModelSerializer):
+    gym_id = serializers.IntegerField()
+    trainer_id = serializers.IntegerField()
+
+    class Meta:
+        model = Invitation
+        fields = ('trainer_id', 'gym_id', 'created_at')
+
+    def create(self, validated_data):
+        gym = Gym.objects.get(pk=validated_data.pop('gym_id'))
+        trainer = Trainer.objects.get(pk=validated_data.pop('trainer_id'))
+        invitation = Invitation.objects.create(gym=gym, trainer=trainer, **validated_data)
+        return invitation
+
+
+class GymTrainerSerializer(serializers.Serializer):
+
+    @transaction.atomic()
+    def create(self, validated_data):
+        gym_id = self.context['gym_id']
+        trainer_id = self.context['trainer_id']
+        Invitation.objects.get(gym_id=gym_id, trainer_id=trainer_id).delete()
+        gym_trainer = GymTrainer.objects.create(gym_id=gym_id, trainer_id=trainer_id)
+        return gym_trainer
