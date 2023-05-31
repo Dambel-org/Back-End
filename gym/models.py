@@ -16,6 +16,15 @@ class SportField(models.Model):
     name = models.CharField(max_length=200)
 
 
+class MapLocation(models.Model):
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    address = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"Latitude: {self.latitude}, Longitude: {self.longitude}"
+
+
 class Gym(models.Model):
     gym_owner = models.ForeignKey(GymOwner, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
@@ -26,7 +35,7 @@ class Gym(models.Model):
     city = models.ForeignKey(City, on_delete=models.CASCADE, related_name='gym')
     contacts = models.TextField()
     phone_number = models.OneToOneField(PhoneNumber, on_delete=models.CASCADE)
-    # TODO location field on map
+    location = models.ForeignKey(MapLocation, on_delete=models.SET_NULL, null=True, blank=True)
 
 
 class TrainerPreRegistration(models.Model):
@@ -61,3 +70,15 @@ class GymTrainer(models.Model):
 
     class Meta:
         unique_together = ['gym', 'trainer']
+
+
+class Invitation(models.Model):
+    gym = models.ForeignKey(Gym, on_delete=models.CASCADE)
+    trainer = models.ForeignKey(Trainer, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['gym', 'trainer']
+
+    def __str__(self):
+        return f'gym: {self.gym.name} , trainer: {self.trainer.user.email} '

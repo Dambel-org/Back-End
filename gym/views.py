@@ -5,11 +5,10 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from account.models import Trainee, GymOwner
-from gym.models import TraineePreRegistration, Gym
-from gym.permissions import IsGymOwner
+from gym.models import TraineePreRegistration, Gym, Invitation
+from gym.permissions import IsGymOwner, IsTrainer
 
 from gym.serializers import *
-
 
 
 class TraineePreRegistrationCreateView(generics.CreateAPIView):
@@ -37,7 +36,6 @@ class TraineePreRegistrationListView(generics.ListAPIView):
         user = self.request.user
         gym_owner = GymOwner.objects.get(user=user)
         return TraineePreRegistration.objects.filter(gym__gym_owner=gym_owner)
-
 
 
 class SubmitTraineePreRegistrationView(generics.CreateAPIView):
@@ -80,7 +78,6 @@ class GymDetailView(generics.RetrieveAPIView):
         return self.get_queryset().get(pk=self.kwargs['gym_id'])
 
 
-
 class ProvinceListView(generics.ListAPIView):
     queryset = Province.objects.all()
     serializer_class = ProvinceSerializer
@@ -93,3 +90,35 @@ class ProvinceDetailView(generics.RetrieveAPIView):
 
     def get_object(self):
         return self.get_queryset().get(pk=self.kwargs['province_id'])
+
+
+class SportFieldList(generics.ListAPIView):
+    queryset = SportField.objects.all()
+    serializer_class = SportFieldSerializer
+
+
+class CreateInviteTrainersView(generics.CreateAPIView):
+    queryset = Invitation.objects.all()
+    permission_classes = [IsGymOwner]
+    serializer_class = CreateInviteSerializer
+
+
+class InvitationViewList(generics.ListAPIView):
+    serializer_class = InviteSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        trainer = Trainer.objects.get(user=user)
+        return Invitation.objects.filter(trainer=trainer)
+
+
+class AcceptInvitationByTrainer(generics.CreateAPIView):
+    serializer_class = AcceptInviteSerializer
+    permission_classes = [IsTrainer]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            return Response({'trainer added to gym successfully!'}, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)

@@ -1,10 +1,15 @@
+import json
+from abc import ABC
+
 from django.db import transaction
 from rest_framework import serializers, status
 from rest_framework.response import Response
 
 from account.models import *
+from account.serializers import TrainerSerializer
 
-from gym.models import TraineePreRegistration, GymTrainee, Gym, City, Province
+from gym.models import TraineePreRegistration, GymTrainee, Gym, City, Province, Invitation, GymTrainer, MapLocation, \
+    SportField
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -75,6 +80,18 @@ class ProvinceSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'city')
 
 
+class MapLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MapLocation
+        fields = "__all__"
+
+
+class SportFieldSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SportField
+        fields = "__all__"
+
+
 class GymSerializer(serializers.ModelSerializer):
     gym_owner = GymOwnerSerializer(read_only=True)
     city = CitySerializer(read_only=True)
@@ -86,13 +103,48 @@ class GymSerializer(serializers.ModelSerializer):
 
 class CreateGymSerializer(serializers.ModelSerializer):
     city_id = serializers.IntegerField()
+    map_location = MapLocationSerializer()
+    sport_field = SportFieldSerializer(many=True)
 
     class Meta:
         model = Gym
-        fields = ('name', 'logo_image', 'background_image', 'description', 'city_id', 'contacts')
+        fields = (
+            'name', 'logo_image', 'background_image', 'description', 'sport_field', 'city_id', 'contacts',
+            'map_location')
 
     def create(self, validated_data):
         city = City.objects.get(pk=validated_data.pop('city_id'))
         gym_owner = GymOwner.objects.get(user=self.context['request'].user)
         gym = Gym.objects.create(gym_owner=gym_owner, city=city, **validated_data)
         return gym
+
+
+class InviteSerializer(serializers.ModelSerializer):
+    gym = GymSerializer(read_only=True)
+
+    class Meta:
+        model = Invitation
+        fields = ('gym', 'created_at')
+
+
+class CreateInviteSerializer(serializers.Serializer):
+    gym_id = serializers.IntegerField()
+    trainer_id = serializers.IntegerField()
+
+    def create(self, validated_data):
+        gym = Gym.objects.get(pk=validated_data.pop('gym_id'))
+        trainer = Trainer.objects.get(pk=validated_data.pop('trainer_id'))
+        invitation = Invitation.objects.create(gym=gym, trainer=trainer, **validated_data)
+        return invitation
+
+
+class AcceptInviteSerializer(serializers.Serializer):
+    gym_id = serializers.IntegerField()
+
+    @transaction.atomic()
+    def create(self, validated_data):
+        gym_id = validated_data.pop('gym_id')
+        trainer = Trainer.objects.get(user=self.context['request'].user)
+        Invitation.objects.get(gym_id=gym_id, trainer=trainer).delete()
+        gym_trainer = GymTrainer.objects.create(gym_id=gym_id, trainer=trainer)
+        return gym_trainer
