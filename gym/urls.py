@@ -13,6 +13,9 @@ urlpatterns = [
     path('detail/<int:gym_id>/', GymDetailView.as_view(), name='gym-detail'),
     path('create/', GymCreateView.as_view(), name='gym-create'),
     path('provinces/', ProvinceListView.as_view(), name='province-list'),
-    path('provinces/<int:province_id>/', ProvinceDetailView.as_view(), name='province-detail')
-
+    path('provinces/<int:province_id>/', ProvinceDetailView.as_view(), name='province-detail'),
+    path('invitations/<int:trainer_id>/', InvitationViewList.as_view(), name="invitation-list"),
+    path('invite-trainers/', CreateInviteTrainersView.as_view(), name='invite-trainer-create'),
+    #trainers_id & gym_id
+    path('accept-invite/<int:gym_id>/<int:trainee_id>/', AcceptInvitationByTrainer.as_view(), name='gym-trainer-create')
 ]

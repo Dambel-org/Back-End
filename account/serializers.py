@@ -88,6 +88,15 @@ class SignUpTrainerSerializer(serializers.ModelSerializer):
         return trainer
 
 
+class TrainerSerializer(serializers.ModelSerializer):
+    user = BaseUserSerializer()
+    phone_number = PhoneNumberSerializer()
+
+    class Meta:
+        model = Trainer
+        fields = ('user', 'phone_number')
+
+
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
