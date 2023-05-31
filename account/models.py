@@ -43,8 +43,6 @@ class Trainer(models.Model):
         verbose_name_plural = 'Trainers'
 
 
-    def __str__(self):
-        return self.user.email
 class Trainee(models.Model):
     user = models.OneToOneField(BaseUser, on_delete=models.CASCADE)
     height = models.FloatField()

@@ -13,11 +13,6 @@ class TraineeAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(Trainer)
-class TraineeAdmin(admin.ModelAdmin):
-    pass
-
-
 @admin.register(GymOwner)
 class TraineeAdmin(admin.ModelAdmin):
     pass

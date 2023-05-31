@@ -6,7 +6,7 @@ from rest_framework import status
 
 from account.models import Trainee, GymOwner
 from gym.models import TraineePreRegistration, Gym, Invitation
-from gym.permissions import IsGymOwner, IsTrainer
+from gym.permissions import IsGymOwner
 
 from gym.serializers import *
 
@@ -92,29 +92,38 @@ class ProvinceDetailView(generics.RetrieveAPIView):
         return self.get_queryset().get(pk=self.kwargs['province_id'])
 
 
-class SportFieldList(generics.ListAPIView):
-    queryset = SportField.objects.all()
-    serializer_class = SportFieldSerializer
-
-
 class CreateInviteTrainersView(generics.CreateAPIView):
+    gym_id = 1
+    trainer_ids = [1, 2]
+
     queryset = Invitation.objects.all()
     permission_classes = [IsGymOwner]
-    serializer_class = CreateInviteSerializer
+    serializer_class = InviteSerializer
+
+    def post(self, request, *args, **kwargs):
+        for trainer_id in trainer_ids:
+            #Invitation.objects.create(trainer_id=trainer_id, gym_id=gym_id)
+            # serializer = self.get_serializer(data=request.data)
+            # if serializer.is_valid():
+            #     self.perform_create(serializer)
 
 
 class InvitationViewList(generics.ListAPIView):
+    lookup_field = 'trainer_id'
     serializer_class = InviteSerializer
 
     def get_queryset(self):
-        user = self.request.user
-        trainer = Trainer.objects.get(user=user)
-        return Invitation.objects.filter(trainer=trainer)
-
+        trainer = Trainer.objects.get(pk=self.kwargs['trainer_id'])
+        return Invitation.objects.filter(trainer = trainer)
 
 class AcceptInvitationByTrainer(generics.CreateAPIView):
-    serializer_class = AcceptInviteSerializer
-    permission_classes = [IsTrainer]
+    serializer_class=GymTrainerSerializer
+    lookup_field = ['gym_id', 'trainer_id']
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"gym_id": self.kwargs['gym_id'],
+                        "trainer_id": self.kwargs['trainer_id']})
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
