@@ -80,3 +80,5 @@ class Invitation(models.Model):
     class Meta:
         unique_together = ['gym', 'trainer']
 
+    def __str__(self):
+        return f'gym: {self.gym.name} , trainer: {self.trainer.user.email} '
