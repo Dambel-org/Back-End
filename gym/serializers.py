@@ -9,7 +9,7 @@ from account.models import *
 from account.serializers import TrainerSerializer
 
 from gym.models import TraineePreRegistration, GymTrainee, Gym, City, Province, Invitation, GymTrainer, MapLocation, \
-    SportField
+    Plan
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -86,30 +86,35 @@ class MapLocationSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class SportFieldSerializer(serializers.ModelSerializer):
+class PlanSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SportField
-        fields = "__all__"
+        model = Plan
+        exclude = ['gym', ]
+
+    def create(self, validated_data):
+        gym_id = self.context['gym_id']
+        plan = Plan.objects.create(gym=gym_id, **validated_data)
+        return plan
 
 
 class GymSerializer(serializers.ModelSerializer):
     gym_owner = GymOwnerSerializer(read_only=True)
     city = CitySerializer(read_only=True)
+    location = MapLocationSerializer(read_only=True)
 
     class Meta:
         model = Gym
-        fields = ('name', 'logo_image', 'background_image', 'description', 'gym_owner', 'city', 'contacts')
+        fields = ('name', 'logo_image', 'background_image', 'description', 'gym_owner', 'city', 'contacts', 'location')
 
 
 class CreateGymSerializer(serializers.ModelSerializer):
     city_id = serializers.IntegerField()
     map_location = MapLocationSerializer()
-    sport_field = SportFieldSerializer(many=True)
 
     class Meta:
         model = Gym
         fields = (
-            'name', 'logo_image', 'background_image', 'description', 'sport_field', 'city_id', 'contacts',
+            'name', 'logo_image', 'background_image', 'description', 'city_id', 'contacts',
             'map_location')
 
     def create(self, validated_data):

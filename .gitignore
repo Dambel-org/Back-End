@@ -131,3 +131,5 @@ dmypy.json
 .idea/
 
 Dambel/settings/dev.py
+gym/logo/
+gym/background/

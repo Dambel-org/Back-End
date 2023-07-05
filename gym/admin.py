@@ -8,7 +8,7 @@ class GymAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(SportField)
+@admin.register(Plan)
 class SportFieldAdmin(admin.ModelAdmin):
     pass
 
