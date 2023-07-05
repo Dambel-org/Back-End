@@ -1,5 +1,7 @@
 from django.shortcuts import render
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
+from rest_framework.filters import SearchFilter
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -67,6 +69,9 @@ class GymCreateView(generics.CreateAPIView):
 class GymListView(generics.ListAPIView):
     queryset = Gym.objects.all()
     serializer_class = GymSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['sport_filed', ]
+    search_fields = ['name', ]
 
 
 class GymDetailView(generics.RetrieveAPIView):
@@ -92,9 +97,25 @@ class ProvinceDetailView(generics.RetrieveAPIView):
         return self.get_queryset().get(pk=self.kwargs['province_id'])
 
 
-class SportFieldList(generics.ListAPIView):
-    queryset = SportField.objects.all()
-    serializer_class = SportFieldSerializer
+class CreatePlanView(generics.CreateAPIView):
+    queryset = Plan.objects.all()
+    serializer_class = PlanSerializer
+    permission_classes = [IsGymOwner]
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"gym_id": self.kwargs['gym_id']})
+
+        return context
+
+    def post(self, request, *args, **kwargs):
+        gym = self.kwargs['gym_id']
+        if gym.gym_owner.user != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            return Response({'plan created!'}, status=status.HTTP_201_CREATED)
 
 
 class CreateInviteTrainersView(generics.CreateAPIView):

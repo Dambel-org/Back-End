@@ -12,8 +12,14 @@ class City(models.Model):
     province = models.ForeignKey(Province, on_delete=models.CASCADE, related_name='city')
 
 
-class SportField(models.Model):
+class Plan(models.Model):
     name = models.CharField(max_length=200)
+    time_start = models.TimeField(default="0")
+    time_end = models.TimeField(default="0")
+    price = models.CharField(max_length=10, default=0, blank=True, null=True)
+    trainer = models.ForeignKey(Trainer, on_delete=models.CASCADE ,blank=True, null=True)
+    trainee = models.ManyToManyField(Trainee, blank=True, null=True)
+    gym = models.ForeignKey('Gym' , on_delete=models.CASCADE, blank=True, null=True)
 
 
 class MapLocation(models.Model):
@@ -31,7 +37,6 @@ class Gym(models.Model):
     logo_image = models.ImageField(upload_to='gym/logo/')
     background_image = models.ImageField(upload_to='gym/background/')
     description = models.TextField()
-    sport_filed = models.ManyToManyField(SportField)
     city = models.ForeignKey(City, on_delete=models.CASCADE, related_name='gym')
     contacts = models.TextField()
     phone_number = models.OneToOneField(PhoneNumber, on_delete=models.CASCADE)
