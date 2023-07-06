@@ -94,3 +94,73 @@ class GymOwnerTestCase(TestCase):
         response = self.client.post(self.signup_gymowner_url, user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+
+class SignUpTraineeViewTestCase(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user_data = {
+            'user': {
+                'email': 'test@test.com',
+                'first_name': 'test',
+                'last_name': 'test',
+                'age': 20,
+                'password': 'test',
+                'conf_password': 'test'
+            },
+            'height': 180,
+            'weight': 80,
+            'phone_number': '09123456789',
+        }
+        self.signup_trainee_url = reverse('trainee-signup')
+
+    def test_signup_trainee_with_valid_data(self):
+        response = self.client.post(self.signup_trainee_url, self.user_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_signup_trainee_with_missing_required_fields(self):
+        data = {
+            'user': {
+                'email': 'test@test.com',
+                'first_name': 'test',
+                'last_name': 'test',
+                'age': 20,
+                'password': 'test',
+                'conf_password': 'test'
+            },
+            'height': 180,
+            'weight': 80,
+        }
+        response = self.client.post(self.signup_trainee_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_signup_trainee_with_existing_email(self):
+        BaseUser.objects.create_user(
+            first_name='hamed',
+            last_name='khosravi',
+            age=21,
+            email='test@test.com',
+            password='password'
+        )
+        data = {
+            'first_name': 'test',
+            'last_name': 'test',
+            'age': 25,
+            'email': 'test@test.com',
+            'height': 180.5,
+            'weight': 75.0
+        }
+        response = self.client.post(self.signup_trainee_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_signup_trainee_with_invalid_data(self):
+        data = {
+            'first_name': 'test',
+            'last_name': 'test',
+            'age': 'twenty-five',
+            'email': 'test@test.com',
+            'height': 180.5,
+            'weight': 75.0
+        }
+        response = self.client.post(self.signup_trainee_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
