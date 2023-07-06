@@ -2,12 +2,9 @@ from datetime import datetime
 
 from django.test import TestCase
 from django.urls import reverse
-
 from rest_framework.test import APIClient
-from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import *
 from .serializers import *
 
 
@@ -65,10 +62,10 @@ class GymOwnerTestCase(TestCase):
                 'last_name': 'test',
                 'age': 20,
                 'password': 'test',
-                'conf_password': 'test'
             },
             'license_number': '123456789',
         }
+
         response = self.client.post(self.signup_gymowner_url, user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -80,6 +77,7 @@ class GymOwnerTestCase(TestCase):
             age=30,
             password='nobodypass',
         )
+
         response = self.client.post(self.signup_gymowner_url, self.user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -90,10 +88,10 @@ class GymOwnerTestCase(TestCase):
             'last_name': 'test',
             'age': 'twenty',
             'password': 'test',
-            'conf_password': 'test',
             'license_number': '123456789',
             'phone_number': '09123456789',
         }
+
         response = self.client.post(self.signup_gymowner_url, user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -133,6 +131,7 @@ class SignUpTraineeViewTestCase(TestCase):
             'height': 180,
             'weight': 80,
         }
+
         response = self.client.post(self.signup_trainee_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -144,6 +143,7 @@ class SignUpTraineeViewTestCase(TestCase):
             email='test@test.com',
             password='password'
         )
+
         data = {
             'first_name': 'test',
             'last_name': 'test',
@@ -152,6 +152,7 @@ class SignUpTraineeViewTestCase(TestCase):
             'height': 180.5,
             'weight': 75.0
         }
+
         response = self.client.post(self.signup_trainee_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -164,6 +165,7 @@ class SignUpTraineeViewTestCase(TestCase):
             'height': 180.5,
             'weight': 75.0
         }
+
         response = self.client.post(self.signup_trainee_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -201,6 +203,7 @@ class SignUpTrainerViewTestCase(TestCase):
             'phone_number': {
             }
         }
+
         response = self.client.post(self.signup_trainer_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -212,6 +215,7 @@ class SignUpTrainerViewTestCase(TestCase):
             age=30,
             password='nobodypass',
         )
+
         response = self.client.post(self.signup_trainer_url, self.user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -225,6 +229,7 @@ class SignUpTrainerViewTestCase(TestCase):
                 'password': 'test',
             }
         }
+
         response = self.client.post(self.signup_trainer_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -246,45 +251,38 @@ class LoginViewTestCase(TestCase):
             'email': 'test@test.com',
             'password': 'wrongpassword'
         }
+
         response = self.client.post(self.login_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_login_view_with_gym_owner_role(self):
-        GymOwner.objects.create(user=self.user, license_number='123456789')
-        data = {
+    def login_view_with_role(self, role):
+        if role == 'GymOwner':
+            GymOwner.objects.create(user=self.user, license_number='123456789')
+        elif role == 'Trainee':
+            Trainee.objects.create(user=self.user, height=180, weight=75)
+        elif role == 'Trainer':
+            trainer_phone_number = PhoneNumber.objects.create(number='09123456789')
+            Trainer.objects.create(user=self.user, phone_number=trainer_phone_number)
+
+        user_data = {
             'email': 'test@test.com',
             'password': 'testpassword'
         }
-        response = self.client.post(self.login_url, data, format='json')
+
+        response = self.client.post(self.login_url, user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('access', response.data)
         self.assertIn('refresh', response.data)
-        self.assertIn('role', response.data)
-        self.assertEqual(response.data['role'], 'GymOwner')
+        self.assertEqual(response.data['role'], role)
+
+    def test_login_view_with_gym_owner_role(self):
+        self.login_view_with_role('GymOwner')
 
     def test_login_view_with_trainee_role(self):
-        Trainee.objects.create(user=self.user, height=180, weight=75)
-        data = {
-            'email': 'test@test.com',
-            'password': 'testpassword'
-        }
-        response = self.client.post(self.login_url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('access', response.data)
-        self.assertIn('refresh', response.data)
-        self.assertIn('role', response.data)
-        self.assertEqual(response.data['role'], 'Trainee')
+        self.login_view_with_role('Trainee')
 
     def test_login_view_with_trainer_role(self):
-        trainer_phone_number = PhoneNumber.objects.create(number='09123456789')
-        Trainer.objects.create(user=self.user, phone_number=trainer_phone_number)
-        data = {
-            'email': 'test@test.com',
-            'password': 'testpassword'
-        }
-        response = self.client.post(self.login_url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['role'], 'Trainer')
+        self.login_view_with_role('Trainer')
 
     def test_refresh_token_valid(self):
         user_data = {
