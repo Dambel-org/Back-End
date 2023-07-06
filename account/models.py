@@ -24,6 +24,9 @@ class BaseUser(AbstractUser):
     last_name = models.CharField(max_length=250)
     age = models.IntegerField(null=True)
     email = models.EmailField(max_length=250, unique=True, null=True)
+    reset_code = models.IntegerField(max_length=6, null=True, blank=True)
+    verify_code = models.IntegerField(max_length=6, null=True, blank=True)
+    verified = models.BooleanField(default=False)
     objects = BaseUserManager()
     username = None
     REQUIRED_FIELDS = ['first_name', 'last_name', 'age']
