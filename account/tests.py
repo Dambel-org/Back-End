@@ -164,3 +164,64 @@ class SignUpTraineeViewTestCase(TestCase):
         response = self.client.post(self.signup_trainee_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+
+class SignUpTrainerViewTestCase(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user_data = {
+            'user': {
+                'email': 'test@test.com',
+                'first_name': 'test',
+                'last_name': 'test',
+                'age': 20,
+                'password': 'test',
+            },
+            'phone_number': {
+                'number': '09123456789',
+            }
+        }
+        self.signup_trainer_url = reverse('trainer-signup')
+
+    def test_signup_trainer_with_valid_data(self):
+        response = self.client.post(self.signup_trainer_url, self.user_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_signup_trainer_with_missing_required_fields(self):
+        data = {
+            'user': {
+                'email': 'test@test.com',
+                'first_name': 'test',
+                'last_name': 'test',
+                'age': 20,
+                'password': 'test',
+            },
+            'phone_number': {
+            }
+        }
+        response = self.client.post(self.signup_trainer_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_signup_trainer_with_existing_email(self):
+        BaseUser.objects.create_user(
+            email='test@test.com',
+            first_name='nobody',
+            last_name='user',
+            age=30,
+            password='nobodypass',
+        )
+        response = self.client.post(self.signup_trainer_url, self.user_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_signup_trainer_with_invalid_data(self):
+        data = {
+            'user': {
+                'email': 'test@test.com',
+                'first_name': 'test',
+                'last_name': 'test',
+                'age': 'twenty',
+                'password': 'test',
+            }
+        }
+        response = self.client.post(self.signup_trainer_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
