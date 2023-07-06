@@ -107,3 +107,23 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         elif Trainer.objects.filter(user=self.user).exists():
             data['role'] = 'Trainer'
         return data
+
+
+class ForgetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class CheckVerificationCodeSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(max_length=6)
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(max_length=6)
+    pass_1 = serializers.CharField(max_length=30)
+    pass_2 = serializers.CharField(max_length=30)
+
+
+class VerifyAccountSerializer(serializers.Serializer):
+    code = serializers.CharField(max_length=6)
