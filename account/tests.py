@@ -1,8 +1,11 @@
+from datetime import datetime
+
 from django.test import TestCase
 from django.urls import reverse
 
 from rest_framework.test import APIClient
 from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import *
 from .serializers import *
@@ -225,3 +228,77 @@ class SignUpTrainerViewTestCase(TestCase):
         response = self.client.post(self.signup_trainer_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+
+class LoginViewTestCase(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = BaseUser.objects.create_user(
+            email='test@test.com',
+            first_name='test',
+            last_name='test',
+            age=30,
+            password='testpassword'
+        )
+        self.login_url = reverse('login')
+
+    def test_login_view_with_invalid_credentials(self):
+        data = {
+            'email': 'test@test.com',
+            'password': 'wrongpassword'
+        }
+        response = self.client.post(self.login_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_login_view_with_gym_owner_role(self):
+        GymOwner.objects.create(user=self.user, license_number='123456789')
+        data = {
+            'email': 'test@test.com',
+            'password': 'testpassword'
+        }
+        response = self.client.post(self.login_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('access', response.data)
+        self.assertIn('refresh', response.data)
+        self.assertIn('role', response.data)
+        self.assertEqual(response.data['role'], 'GymOwner')
+
+    def test_login_view_with_trainee_role(self):
+        Trainee.objects.create(user=self.user, height=180, weight=75)
+        data = {
+            'email': 'test@test.com',
+            'password': 'testpassword'
+        }
+        response = self.client.post(self.login_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('access', response.data)
+        self.assertIn('refresh', response.data)
+        self.assertIn('role', response.data)
+        self.assertEqual(response.data['role'], 'Trainee')
+
+    def test_login_view_with_trainer_role(self):
+        trainer_phone_number = PhoneNumber.objects.create(number='09123456789')
+        Trainer.objects.create(user=self.user, phone_number=trainer_phone_number)
+        data = {
+            'email': 'test@test.com',
+            'password': 'testpassword'
+        }
+        response = self.client.post(self.login_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['role'], 'Trainer')
+
+    def test_refresh_token_valid(self):
+        user_data = {
+            'email': 'test@test.com',
+            'password': 'testpassword',
+        }
+
+        response = self.client.post(self.login_url, user_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        refresh_token = response.data.get('refresh', None)
+        self.assertIsNotNone(refresh_token)
+
+        refresh = RefreshToken(refresh_token)
+        current_time = datetime.utcnow()
+        expiration_time = refresh.payload['exp']
+        self.assertGreater(expiration_time, current_time.timestamp())
