@@ -101,10 +101,10 @@ class GymSerializer(serializers.ModelSerializer):
     gym_owner = GymOwnerSerializer(read_only=True)
     city = CitySerializer(read_only=True)
     location = MapLocationSerializer(read_only=True)
-
+    plans = PlanSerializer(many=True)
     class Meta:
         model = Gym
-        fields = ('name', 'logo_image', 'background_image', 'description', 'gym_owner', 'city', 'contacts', 'location')
+        fields = ('name', 'logo_image', 'background_image', 'description', 'gym_owner', 'city', 'contacts', 'location' , 'plans')
 
 
 class CreateGymSerializer(serializers.ModelSerializer):

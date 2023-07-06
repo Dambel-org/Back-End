@@ -1,3 +1,6 @@
+from math import sqrt
+
+from _decimal import Decimal
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
@@ -70,8 +73,28 @@ class GymListView(generics.ListAPIView):
     queryset = Gym.objects.all()
     serializer_class = GymSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ['sport_filed', ]
-    search_fields = ['name', ]
+    filterset_fields = []
+    search_fields = ['name', 'plans__name']
+
+    def get_queryset(self):
+        latitude = self.request.GET.get('latitude', '')
+        longitude = self.request.GET.get('longitude', '')
+        r = self.request.GET.get('r', '')
+        if latitude == '' and longitude == '':
+            return Gym.objects.all()
+        gyms = Gym.objects.all()
+        result = []
+        x = Decimal(latitude)
+        y = Decimal(longitude)
+        r = Decimal(r)
+        for gym in gyms:
+            gym_r = sqrt(
+                (gym.location.latitude - x) ** 2 + (gym.location.longitude - y) ** 2)
+
+            if gym_r <= r:
+                result.append(gym)
+
+        return result
 
 
 class GymDetailView(generics.RetrieveAPIView):

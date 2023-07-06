@@ -19,7 +19,7 @@ class Plan(models.Model):
     price = models.CharField(max_length=10, default=0, blank=True, null=True)
     trainer = models.ForeignKey(Trainer, on_delete=models.CASCADE ,blank=True, null=True)
     trainee = models.ManyToManyField(Trainee, blank=True, null=True)
-    gym = models.ForeignKey('Gym' , on_delete=models.CASCADE, blank=True, null=True)
+    gym = models.ForeignKey('Gym' , on_delete=models.CASCADE, blank=True, null=True , related_name='plans')
 
 
 class MapLocation(models.Model):
