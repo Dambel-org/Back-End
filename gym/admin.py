@@ -9,7 +9,7 @@ class GymAdmin(admin.ModelAdmin):
 
 
 @admin.register(Plan)
-class SportFieldAdmin(admin.ModelAdmin):
+class PlanAdmin(admin.ModelAdmin):
     pass
 
 
@@ -17,6 +17,9 @@ class SportFieldAdmin(admin.ModelAdmin):
 class InvitationAdmin(admin.ModelAdmin):
     pass
 
+@admin.register(MapLocation)
+class LocationAdmin(admin.ModelAdmin):
+    pass
 
 class CityAdmin(admin.TabularInline):
     model = City
