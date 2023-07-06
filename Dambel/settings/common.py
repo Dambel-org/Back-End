@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'rest_framework_swagger',
     'drf_yasg',
     'corsheaders',
+    'django_filters',
 
     'account',
     'gym',

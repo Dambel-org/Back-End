@@ -1,3 +1,4 @@
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import CreateAPIView
 from rest_framework import generics
 from rest_framework.views import APIView
@@ -50,3 +51,5 @@ class LoginView(TokenObtainPairView):
 class TrainerListView(generics.ListAPIView):
     queryset = Trainer.objects.all()
     serializer_class = TrainerSerializer
+    filter_backends = [SearchFilter]
+    search_fields = ['user__first_name', 'user__last_name']
