@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
 from account.models import GymOwner, Trainee, Trainer, PhoneNumber
@@ -17,9 +18,9 @@ class Plan(models.Model):
     time_start = models.TimeField(default="0")
     time_end = models.TimeField(default="0")
     price = models.CharField(max_length=10, default=0, blank=True, null=True)
-    trainer = models.ForeignKey(Trainer, on_delete=models.CASCADE ,blank=True, null=True)
+    trainer = models.ForeignKey(Trainer, on_delete=models.CASCADE, blank=True, null=True)
     trainee = models.ManyToManyField(Trainee, blank=True, null=True)
-    gym = models.ForeignKey('Gym' , on_delete=models.CASCADE, blank=True, null=True , related_name='plans')
+    gym = models.ForeignKey('Gym', on_delete=models.CASCADE, blank=True, null=True, related_name='plans')
 
 
 class MapLocation(models.Model):
@@ -41,6 +42,14 @@ class Gym(models.Model):
     contacts = models.TextField()
     phone_number = models.OneToOneField(PhoneNumber, on_delete=models.CASCADE)
     location = models.ForeignKey(MapLocation, on_delete=models.SET_NULL, null=True, blank=True)
+
+
+class Comment(models.Model):
+    trainee = models.ForeignKey(Trainee, on_delete=models.CASCADE)
+    plan = models.ForeignKey(Plan, on_delete=models.CASCADE)
+    rate = models.IntegerField(default=1, validators=[MaxValueValidator(5), MinValueValidator(1)])
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class TrainerPreRegistration(models.Model):

@@ -11,7 +11,7 @@ from rest_framework import status
 
 from account.models import Trainee, GymOwner
 from gym.models import TraineePreRegistration, Gym, Invitation
-from gym.permissions import IsGymOwner, IsTrainer
+from gym.permissions import IsGymOwner, IsTrainer, IsTrainee
 
 from gym.serializers import *
 
@@ -104,6 +104,19 @@ class GymDetailView(generics.RetrieveAPIView):
 
     def get_object(self):
         return self.get_queryset().get(pk=self.kwargs['gym_id'])
+
+
+class CommentCreateView(generics.CreateAPIView):
+    queryset = Comment.objects.all()
+    permission_classes = [IsTrainee]
+    serializer_class = CreateCommentSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            return Response({'comment added successfully!'}, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProvinceListView(generics.ListAPIView):
