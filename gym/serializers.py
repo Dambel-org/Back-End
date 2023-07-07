@@ -9,7 +9,7 @@ from account.models import *
 from account.serializers import TrainerSerializer
 
 from gym.models import TraineePreRegistration, GymTrainee, Gym, City, Province, Invitation, GymTrainer, MapLocation, \
-    Plan
+    Plan, Comment
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -86,7 +86,17 @@ class MapLocationSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class CommentSerializer(serializers.ModelSerializer):
+    trainee = TraineeSerializer()
+
+    class Meta:
+        model = Comment
+        fields = ['trainee', 'rate', 'text']
+
+
 class PlanSerializer(serializers.ModelSerializer):
+    comment_set = CommentSerializer(many=True)
+
     class Meta:
         model = Plan
         exclude = ['gym', ]
@@ -102,9 +112,22 @@ class GymSerializer(serializers.ModelSerializer):
     city = CitySerializer(read_only=True)
     location = MapLocationSerializer(read_only=True)
     plans = PlanSerializer(many=True)
+    rate = serializers.SerializerMethodField()
+
     class Meta:
         model = Gym
-        fields = ('name', 'logo_image', 'background_image', 'description', 'gym_owner', 'city', 'contacts', 'location' , 'plans')
+        fields = (
+            'name', 'logo_image', 'background_image', 'description', 'gym_owner', 'city', 'contacts', 'location',
+            'plans', 'rate')
+
+    def get_rate(self, obj):
+        comments = Comment.objects.filter(plan__gym=obj)
+        rate = 0
+        for comment in comments:
+            rate += comment.rate
+        if rate != 0:
+            rate = round(rate / len(comments), 2)
+        return rate
 
 
 class CreateGymSerializer(serializers.ModelSerializer):
@@ -122,6 +145,22 @@ class CreateGymSerializer(serializers.ModelSerializer):
         gym_owner = GymOwner.objects.get(user=self.context['request'].user)
         gym = Gym.objects.create(gym_owner=gym_owner, city=city, **validated_data)
         return gym
+
+
+class CreateCommentSerializer(serializers.ModelSerializer):
+    plan = serializers.IntegerField()
+
+    class Meta:
+        model = Comment
+        fields = ['plan', 'rate', 'text']
+
+    def create(self, validated_data):
+        plan_id = validated_data.pop('plan')
+        plan = Plan.objects.get(id=plan_id)
+        user = self.context['request'].user
+        trainee = Trainee.objects.get(user=user)
+        comment = Comment.objects.create(trainee=trainee, plan=plan, **validated_data)
+        return comment
 
 
 class InviteSerializer(serializers.ModelSerializer):
