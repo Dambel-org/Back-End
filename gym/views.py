@@ -1,4 +1,5 @@
 from math import sqrt
+from urllib import response
 
 from _decimal import Decimal
 from django.shortcuts import render
@@ -67,6 +68,22 @@ class GymCreateView(generics.CreateAPIView):
     queryset = Gym.objects.all()
     permission_classes = [IsGymOwner]
     serializer_class = CreateGymSerializer
+
+    def post(self, request, *args, **kwargs):
+        try:
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid():
+                validated_data = serializer.validated_data
+                city = City.objects.get(pk=validated_data.pop('city_id'))
+                latitude = validated_data.pop('latitude')
+                longitude = validated_data.pop('longitude')
+                address = validated_data.pop('address')
+                map_location = MapLocation.objects.create(latitude=latitude, longitude=longitude, address=address)
+                gym_owner = GymOwner.objects.get(user=request.user)
+                Gym.objects.create(gym_owner=gym_owner, city=city, location=map_location, **validated_data)
+                return Response({'detail': 'gym created successfully!'}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'detail : bad request!'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GymListView(generics.ListAPIView):

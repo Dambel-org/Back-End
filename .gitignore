@@ -133,3 +133,4 @@ dmypy.json
 Dambel/settings/dev.py
 gym/logo/
 gym/background/
+gym/license/

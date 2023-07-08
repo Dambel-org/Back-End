@@ -130,21 +130,17 @@ class GymSerializer(serializers.ModelSerializer):
         return rate
 
 
-class CreateGymSerializer(serializers.ModelSerializer):
+class CreateGymSerializer(serializers.Serializer):
     city_id = serializers.IntegerField()
-    map_location = MapLocationSerializer()
-
-    class Meta:
-        model = Gym
-        fields = (
-            'name', 'logo_image', 'background_image', 'description', 'city_id', 'contacts',
-            'map_location')
-
-    def create(self, validated_data):
-        city = City.objects.get(pk=validated_data.pop('city_id'))
-        gym_owner = GymOwner.objects.get(user=self.context['request'].user)
-        gym = Gym.objects.create(gym_owner=gym_owner, city=city, **validated_data)
-        return gym
+    latitude = serializers.DecimalField(max_digits=9, decimal_places=6)
+    longitude = serializers.DecimalField(max_digits=9, decimal_places=6)
+    address = serializers.CharField(max_length=255)
+    name = serializers.CharField(max_length=100)
+    logo_image = serializers.ImageField()
+    background_image = serializers.ImageField()
+    license_image = serializers.ImageField()
+    description = serializers.CharField(style={'base_template': 'textarea.html'})
+    contacts = serializers.CharField(style={'base_template': 'textarea.html'})
 
 
 class CreateCommentSerializer(serializers.ModelSerializer):
