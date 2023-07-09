@@ -98,7 +98,7 @@ Verification Code : {code}
         """
         email_from = settings.EMAIL_HOST_USER
         recipient_list = [user.email, ]
-        send_mail(subject, message, email_from, recipient_list)
+        send_mail(subject, message, email_from, recipient_list , fail_silently=True)
 
         return Response({'detail': 'Email sent successfully!'}, status=status.HTTP_201_CREATED)
 
@@ -169,7 +169,7 @@ Dambel team
                 """
         email_from = settings.EMAIL_HOST_USER
         recipient_list = [user.email, ]
-        send_mail(subject, message, email_from, recipient_list)
+        send_mail(subject, message, email_from, recipient_list , fail_silently=True)
 
         return Response({'detail': 'Email sent successfully!'}, status=status.HTTP_201_CREATED)
 

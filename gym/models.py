@@ -37,10 +37,10 @@ class Gym(models.Model):
     name = models.CharField(max_length=100)
     logo_image = models.ImageField(upload_to='gym/logo/')
     background_image = models.ImageField(upload_to='gym/background/')
+    license_image = models.ImageField(upload_to='gym/license/', default=None , null=True , blank=True)
     description = models.TextField()
     city = models.ForeignKey(City, on_delete=models.CASCADE, related_name='gym')
     contacts = models.TextField()
-    phone_number = models.OneToOneField(PhoneNumber, on_delete=models.CASCADE)
     location = models.ForeignKey(MapLocation, on_delete=models.SET_NULL, null=True, blank=True)
 
 
