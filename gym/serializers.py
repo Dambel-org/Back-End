@@ -2,14 +2,16 @@ import json
 from abc import ABC
 
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers, status
 from rest_framework.response import Response
 
 from account.models import *
 from account.serializers import TrainerSerializer
 
-from gym.models import TraineePreRegistration, GymTrainee, Gym, City, Province, Invitation, GymTrainer, MapLocation, \
-    Plan, Comment
+from gym.models import TraineePreRegistration, GymTrainee, Gym, City, Province, TrainerInvitation, GymTrainer, \
+    MapLocation, \
+    Plan, Comment, TraineeRequest
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -136,11 +138,11 @@ class CreateGymSerializer(serializers.Serializer):
     longitude = serializers.DecimalField(max_digits=9, decimal_places=6)
     address = serializers.CharField(max_length=255)
     name = serializers.CharField(max_length=100)
+    description = serializers.CharField(style={'base_template': 'textarea.html'})
+    contacts = serializers.CharField(style={'base_template': 'textarea.html'})
     logo_image = serializers.ImageField()
     background_image = serializers.ImageField()
     license_image = serializers.ImageField()
-    description = serializers.CharField(style={'base_template': 'textarea.html'})
-    contacts = serializers.CharField(style={'base_template': 'textarea.html'})
 
 
 class CreateCommentSerializer(serializers.ModelSerializer):
@@ -163,7 +165,7 @@ class InviteSerializer(serializers.ModelSerializer):
     gym = GymSerializer(read_only=True)
 
     class Meta:
-        model = Invitation
+        model = TrainerInvitation
         fields = ('gym', 'created_at')
 
 
@@ -174,7 +176,7 @@ class CreateInviteSerializer(serializers.Serializer):
     def create(self, validated_data):
         gym = Gym.objects.get(pk=validated_data.pop('gym_id'))
         trainer = Trainer.objects.get(pk=validated_data.pop('trainer_id'))
-        invitation = Invitation.objects.create(gym=gym, trainer=trainer, **validated_data)
+        invitation = TrainerInvitation.objects.create(gym=gym, trainer=trainer, **validated_data)
         return invitation
 
 
@@ -185,6 +187,39 @@ class AcceptInviteSerializer(serializers.Serializer):
     def create(self, validated_data):
         gym_id = validated_data.pop('gym_id')
         trainer = Trainer.objects.get(user=self.context['request'].user)
-        Invitation.objects.get(gym_id=gym_id, trainer=trainer).delete()
+        TrainerInvitation.objects.get(gym_id=gym_id, trainer=trainer).delete()
         gym_trainer = GymTrainer.objects.create(gym_id=gym_id, trainer=trainer)
         return gym_trainer
+
+
+class RequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TraineeRequest
+        fields = "__all__"
+
+
+class CreateRequestSerializer(serializers.Serializer):
+    plan_id = serializers.IntegerField()
+
+    def create(self, validated_data):
+        plan_id = validated_data.pop('plan_id')
+        plan = Plan.objects.get(pk=plan_id)
+        trainee = Trainee.objects.get(user=self.context['request'].user)
+        request = TraineeRequest.objects.create(plan_id=plan.pk, trainee_id=trainee.pk)
+        return request
+
+
+class AcceptRequestSerializer(serializers.Serializer):
+    plan_id = serializers.IntegerField()
+    trainee_id = serializers.IntegerField()
+
+    def create(self, validated_data):
+        trainee_id = validated_data.pop('trainee_id')
+        plan_id = validated_data.pop('plan_id')
+        print('1222222222222222222222222222')
+        plan = Plan.objects.get(pk=plan_id)
+        trainee = Trainee.objects.get(pk=trainee_id)
+        request = TraineeRequest.objects.get(plan=plan,trainee=trainee)
+        plan.trainee.add(trainee)
+        request.delete()
+        return request

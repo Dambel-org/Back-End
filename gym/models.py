@@ -37,7 +37,7 @@ class Gym(models.Model):
     name = models.CharField(max_length=100)
     logo_image = models.ImageField(upload_to='gym/logo/')
     background_image = models.ImageField(upload_to='gym/background/')
-    license_image = models.ImageField(upload_to='gym/license/', default=None , null=True , blank=True)
+    license_image = models.ImageField(upload_to='gym/license/', default=None, null=True, blank=True)
     description = models.TextField()
     city = models.ForeignKey(City, on_delete=models.CASCADE, related_name='gym')
     contacts = models.TextField()
@@ -86,7 +86,7 @@ class GymTrainer(models.Model):
         unique_together = ['gym', 'trainer']
 
 
-class Invitation(models.Model):
+class TrainerInvitation(models.Model):
     gym = models.ForeignKey(Gym, on_delete=models.CASCADE)
     trainer = models.ForeignKey(Trainer, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -96,3 +96,15 @@ class Invitation(models.Model):
 
     def __str__(self):
         return f'gym: {self.gym.name} , trainer: {self.trainer.user.email} '
+
+
+class TraineeRequest(models.Model):
+    plan = models.ForeignKey(Plan, on_delete=models.CASCADE)
+    trainee = models.ForeignKey(Trainee, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['plan', 'trainee']
+
+    def __str__(self):
+        return f'gym: {self.plan.name} , trainer: {self.trainee.user.email}'

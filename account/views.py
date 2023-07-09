@@ -189,11 +189,10 @@ Dambel team
         return Response({'detail': 'bad request'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ProfileView(generics.ListAPIView):
-    queryset = BaseUser.objects.all()
-    serializer_class = ProfileSerializer
+class ProfileView(APIView):
     permission_classes = [IsAuthenticated, ]
 
-    def get_queryset(self):
-        pk = self.request.user.pk
-        return BaseUser.objects.filter(pk=pk)
+    def get(self, request, format=None):
+        pk = request.user.pk
+        user = BaseUser.objects.get(pk=pk)
+        return Response(ProfileSerializer(user).data)
