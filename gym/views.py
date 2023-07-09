@@ -6,12 +6,13 @@ from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
 from rest_framework.filters import SearchFilter
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
 from account.models import Trainee, GymOwner
-from gym.models import TraineePreRegistration, Gym, Invitation
+from gym.models import TraineePreRegistration, Gym, TrainerInvitation
 from gym.permissions import IsGymOwner, IsTrainer, IsTrainee
 
 from gym.serializers import *
@@ -82,6 +83,8 @@ class GymCreateView(generics.CreateAPIView):
                 gym_owner = GymOwner.objects.get(user=request.user)
                 Gym.objects.create(gym_owner=gym_owner, city=city, location=map_location, **validated_data)
                 return Response({'detail': 'gym created successfully!'}, status=status.HTTP_201_CREATED)
+            else:
+                return Response({'detail' 'data is not valid!'}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({'detail : bad request!'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -114,10 +117,15 @@ class GymListView(generics.ListAPIView):
         return result
 
 
-class GymDetailView(generics.RetrieveAPIView):
+class GymDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Gym.objects.all()
     serializer_class = GymSerializer
     lookup_field = 'gym_id'
+
+    def get_permissions(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return [IsGymOwner(), ]
+        return [AllowAny(), ]
 
     def get_object(self):
         return self.get_queryset().get(pk=self.kwargs['gym_id'])
@@ -172,18 +180,19 @@ class CreatePlanView(generics.CreateAPIView):
 
 
 class CreateInviteTrainersView(generics.CreateAPIView):
-    queryset = Invitation.objects.all()
+    queryset = TrainerInvitation.objects.all()
     permission_classes = [IsGymOwner]
     serializer_class = CreateInviteSerializer
 
 
 class InvitationViewList(generics.ListAPIView):
     serializer_class = InviteSerializer
+    permission_classes = [IsTrainer, ]
 
     def get_queryset(self):
         user = self.request.user
         trainer = Trainer.objects.get(user=user)
-        return Invitation.objects.filter(trainer=trainer)
+        return TrainerInvitation.objects.filter(trainer=trainer)
 
 
 class AcceptInvitationByTrainer(generics.CreateAPIView):
@@ -196,3 +205,85 @@ class AcceptInvitationByTrainer(generics.CreateAPIView):
             self.perform_create(serializer)
             return Response({'trainer added to gym successfully!'}, status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserGymView(generics.ListAPIView):
+    serializer_class = GymSerializer
+    permission_classes = [IsAuthenticated, ]
+
+    def get_role(self):
+        user = self.request.user
+        trainee = Trainee.objects.filter(user=user)
+        if len(trainee) == 1:
+            return trainee[0]
+        trainer = Trainer.objects.filter(user=user)
+        if len(trainer) == 1:
+            return trainer[0]
+        gym_owner = GymOwner.objects.filter(user=user)
+        if len(gym_owner) == 1:
+            return gym_owner[0]
+
+    def get_queryset(self):
+        user_by_role = self.get_role()
+        if isinstance(user_by_role, GymOwner):
+            return Gym.objects.filter(gym_owner=user_by_role)
+        if isinstance(user_by_role, Trainee):
+            gym_trainees = GymTrainee.objects.filter(trainee=user_by_role)
+            res = []
+            for gt in gym_trainees:
+                res.append(gt.gym)
+            return res
+        if isinstance(user_by_role, Trainer):
+            gym_trainers = GymTrainer.objects.filter(trainer=user_by_role)
+            res = []
+            for gt in gym_trainers:
+                res.append(gt.gym)
+            return res
+
+
+class TraineePlanView(APIView):
+    permission_classes = [IsTrainee, ]
+
+    def get(self, request, format=None):
+        user = request.user
+        trainee = Trainee.objects.get(user=user)
+        plans = Plan.objects.filter(trainee=trainee)
+
+        return Response(PlanSerializer(plans, many=True).data)
+
+
+class RequestViewList(generics.ListAPIView):
+    serializer_class = RequestSerializer
+    permission_classes = [IsGymOwner, IsTrainee]
+
+    def get_role(self):
+        user = self.request.user
+        trainee = Trainee.objects.filter(user=user)
+        if len(trainee) == 1:
+            return trainee[0]
+        trainer = Trainer.objects.filter(user=user)
+        if len(trainer) == 1:
+            return trainer[0]
+        gym_owner = GymOwner.objects.filter(user=user)
+        if len(gym_owner) == 1:
+            return gym_owner[0]
+
+    def get_queryset(self):
+        user_by_role = self.get_role()
+        result = None
+        if isinstance(user_by_role, GymOwner):
+            plans = Plan.objects.filter(gym__gym_owner=user_by_role)
+            result = TraineeRequest.objects.filter(plan__in=plans)
+        elif isinstance(user_by_role, Trainee):
+            result = TraineeRequest.objects.filter(trainee=user_by_role)
+        return result
+
+
+class CreateRequestTraineeView(generics.CreateAPIView):
+    serializer_class = CreateRequestSerializer
+    permission_classes = [IsTrainee, ]
+
+
+class AcceptRequestByGymOwner(generics.CreateAPIView):
+    serializer_class = AcceptRequestSerializer
+    permission_classes = [IsGymOwner, ]
