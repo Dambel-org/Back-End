@@ -3,6 +3,7 @@ import random
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import CreateAPIView
 from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import *
 from django.core.mail import send_mail
@@ -65,6 +66,9 @@ class TrainerListView(generics.ListAPIView):
     search_fields = ['user__first_name', 'user__last_name']
 
 
+# class GymUsersView(generics.ListAPIView):
+
+
 class ForgotPasswordView(generics.CreateAPIView):
     serializer_class = ForgetPasswordSerializer
 
@@ -98,7 +102,7 @@ Verification Code : {code}
         """
         email_from = settings.EMAIL_HOST_USER
         recipient_list = [user.email, ]
-        send_mail(subject, message, email_from, recipient_list , fail_silently=True)
+        send_mail(subject, message, email_from, recipient_list, fail_silently=True)
 
         return Response({'detail': 'Email sent successfully!'}, status=status.HTTP_201_CREATED)
 
@@ -169,7 +173,7 @@ Dambel team
                 """
         email_from = settings.EMAIL_HOST_USER
         recipient_list = [user.email, ]
-        send_mail(subject, message, email_from, recipient_list , fail_silently=True)
+        send_mail(subject, message, email_from, recipient_list, fail_silently=True)
 
         return Response({'detail': 'Email sent successfully!'}, status=status.HTTP_201_CREATED)
 
@@ -183,3 +187,13 @@ Dambel team
             user.save()
             return Response({'detail': 'Account activated successfully!'}, status=status.HTTP_201_CREATED)
         return Response({'detail': 'bad request'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProfileView(generics.ListAPIView):
+    queryset = BaseUser.objects.all()
+    serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticated, ]
+
+    def get_queryset(self):
+        pk = self.request.user.pk
+        return BaseUser.objects.filter(pk=pk)

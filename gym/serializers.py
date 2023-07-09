@@ -117,7 +117,7 @@ class GymSerializer(serializers.ModelSerializer):
     class Meta:
         model = Gym
         fields = (
-            'name', 'logo_image', 'background_image', 'description', 'gym_owner', 'city', 'contacts', 'location',
+            'id', 'name', 'logo_image', 'background_image', 'description', 'gym_owner', 'city', 'contacts', 'location',
             'plans', 'rate')
 
     def get_rate(self, obj):
