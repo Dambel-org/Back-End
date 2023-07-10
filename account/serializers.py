@@ -17,7 +17,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 class BaseUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = BaseUser
-        fields = ('first_name', 'last_name', 'email', 'phone_number', 'password')
+        fields = ('id', 'first_name', 'last_name', 'email', 'phone_number', 'password')
 
     def create(self, validated_data):
         user = BaseUser.objects.create_user(**validated_data)
@@ -80,11 +80,10 @@ class SignUpTrainerSerializer(serializers.ModelSerializer):
 
 class TrainerSerializer(serializers.ModelSerializer):
     user = BaseUserSerializer()
-    phone_number = PhoneNumberSerializer()
 
     class Meta:
         model = Trainer
-        fields = ('user', 'phone_number')
+        fields = ('id', 'user')
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):

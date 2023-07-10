@@ -97,7 +97,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class PlanSerializer(serializers.ModelSerializer):
-    comment_set = CommentSerializer(many=True)
+    comment_set = CommentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Plan
@@ -105,7 +105,10 @@ class PlanSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         gym_id = self.context['gym_id']
-        plan = Plan.objects.create(gym=gym_id, **validated_data)
+        trainees = validated_data.pop('trainee')
+        plan = Plan.objects.create(gym_id=gym_id, **validated_data)
+        for trainee in trainees:
+            plan.trainee.add(trainee.pk)
         return plan
 
 
@@ -113,7 +116,7 @@ class GymSerializer(serializers.ModelSerializer):
     gym_owner = GymOwnerSerializer(read_only=True)
     city = CitySerializer(read_only=True)
     location = MapLocationSerializer(read_only=True)
-    plans = PlanSerializer(many=True)
+    plans = PlanSerializer(many=True, read_only=True)
     rate = serializers.SerializerMethodField()
 
     class Meta:
@@ -219,7 +222,7 @@ class AcceptRequestSerializer(serializers.Serializer):
         print('1222222222222222222222222222')
         plan = Plan.objects.get(pk=plan_id)
         trainee = Trainee.objects.get(pk=trainee_id)
-        request = TraineeRequest.objects.get(plan=plan,trainee=trainee)
+        request = TraineeRequest.objects.get(plan=plan, trainee=trainee)
         plan.trainee.add(trainee)
         request.delete()
         return request

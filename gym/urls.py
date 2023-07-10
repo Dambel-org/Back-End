@@ -30,4 +30,5 @@ urlpatterns = [
 
     path('comment/create/', CommentCreateView.as_view(), name='add-comment'),
 
+    path('users/<int:gym_id>', GymUsersView.as_view(), name='gym-users')
 ]
