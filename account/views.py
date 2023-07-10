@@ -6,7 +6,8 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import *
-from django.core.mail import send_mail
+# from django.core.mail import send_mail
+from Dambel.function_utils import send_email
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.sites.shortcuts import get_current_site
@@ -102,8 +103,8 @@ Verification Code : {code}
         """
         email_from = settings.EMAIL_HOST_USER
         recipient_list = [user.email, ]
-        send_mail(subject, message, email_from, recipient_list, fail_silently=True)
-
+        # send_mail(subject, message, email_from, recipient_list, fail_silently=True)
+        send_email(subject, message, recipient_list)
         return Response({'detail': 'Email sent successfully!'}, status=status.HTTP_201_CREATED)
 
 
