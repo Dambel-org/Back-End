@@ -15,9 +15,22 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class BaseUserSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = BaseUser
-        fields = ('id', 'first_name', 'last_name', 'email', 'phone_number', 'password')
+        fields = ('id', 'first_name', 'last_name', 'email', 'phone_number', 'password', 'role')
+
+    def get_role(self, obj):
+        user = GymOwner.objects.filter(user=obj)
+        if len(user) == 1:
+            return "GymOwner"
+        user = Trainer.objects.filter(user=obj)
+        if len(user) == 1:
+            return "Trainer"
+        user = Trainee.objects.filter(user=obj)
+        if len(user) == 1:
+            return "Trainee"
 
     def create(self, validated_data):
         user = BaseUser.objects.create_user(**validated_data)
