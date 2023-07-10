@@ -196,6 +196,9 @@ class AcceptInviteSerializer(serializers.Serializer):
 
 
 class RequestSerializer(serializers.ModelSerializer):
+    plan = PlanSerializer()
+    trainee = TraineeSerializer()
+
     class Meta:
         model = TraineeRequest
         fields = "__all__"
