@@ -258,7 +258,6 @@ class TraineePlanView(APIView):
 
 class RequestViewList(generics.ListAPIView):
     serializer_class = RequestSerializer
-    permission_classes = [IsGymOwner, IsTrainee]
 
     def get_role(self):
         user = self.request.user
@@ -280,6 +279,8 @@ class RequestViewList(generics.ListAPIView):
             result = TraineeRequest.objects.filter(plan__in=plans)
         elif isinstance(user_by_role, Trainee):
             result = TraineeRequest.objects.filter(trainee=user_by_role)
+        else:
+            result = []
         return result
 
 
