@@ -113,7 +113,7 @@ class GymSerializer(serializers.ModelSerializer):
     gym_owner = GymOwnerSerializer(read_only=True)
     city = CitySerializer(read_only=True)
     location = MapLocationSerializer(read_only=True)
-    plans = PlanSerializer(many=True)
+    plans = PlanSerializer(many=True, read_only=True)
     rate = serializers.SerializerMethodField()
 
     class Meta:
@@ -219,7 +219,7 @@ class AcceptRequestSerializer(serializers.Serializer):
         print('1222222222222222222222222222')
         plan = Plan.objects.get(pk=plan_id)
         trainee = Trainee.objects.get(pk=trainee_id)
-        request = TraineeRequest.objects.get(plan=plan,trainee=trainee)
+        request = TraineeRequest.objects.get(plan=plan, trainee=trainee)
         plan.trainee.add(trainee)
         request.delete()
         return request
