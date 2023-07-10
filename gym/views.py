@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from account.models import Trainee, GymOwner
+from account.serializers import BaseUserSerializer
 from gym.models import TraineePreRegistration, Gym, TrainerInvitation
 from gym.permissions import IsGymOwner, IsTrainer, IsTrainee
 
@@ -166,17 +167,20 @@ class CreatePlanView(generics.CreateAPIView):
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context.update({"gym_id": self.kwargs['gym_id']})
-
         return context
 
     def post(self, request, *args, **kwargs):
-        gym = self.kwargs['gym_id']
+        gym_id = self.kwargs['gym_id']
+        gym = Gym.objects.get(pk=gym_id)
         if gym.gym_owner.user != request.user:
             return Response(status=status.HTTP_403_FORBIDDEN)
         serializer = self.get_serializer(data=request.data)
+
         if serializer.is_valid():
             self.perform_create(serializer)
             return Response({'plan created!'}, status=status.HTTP_201_CREATED)
+        print(serializer.errors)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class CreateInviteTrainersView(generics.CreateAPIView):
@@ -287,3 +291,19 @@ class CreateRequestTraineeView(generics.CreateAPIView):
 class AcceptRequestByGymOwner(generics.CreateAPIView):
     serializer_class = AcceptRequestSerializer
     permission_classes = [IsGymOwner, ]
+
+
+class GymUsersView(generics.ListAPIView):
+    serializer_class = BaseUserSerializer
+    permission_classes = [IsGymOwner]
+    lookup_field = "gym_id"
+
+    def get_queryset(self):
+        gym_trainers = GymTrainer.objects.filter(gym_id=self.kwargs['gym_id'])
+        gym_trainees = GymTrainee.objects.filter(gym_id=self.kwargs['gym_id'])
+        result = []
+        for gym_trainee in gym_trainees:
+            result.append(gym_trainee.trainee.user)
+        for gym_trainer in gym_trainers:
+            result.append(gym_trainer.trainer.user)
+        return result

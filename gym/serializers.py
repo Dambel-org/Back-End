@@ -97,7 +97,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class PlanSerializer(serializers.ModelSerializer):
-    comment_set = CommentSerializer(many=True)
+    comment_set = CommentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Plan
@@ -105,7 +105,10 @@ class PlanSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         gym_id = self.context['gym_id']
-        plan = Plan.objects.create(gym=gym_id, **validated_data)
+        trainees = validated_data.pop('trainee')
+        plan = Plan.objects.create(gym_id=gym_id, **validated_data)
+        for trainee in trainees:
+            plan.trainee.add(trainee.pk)
         return plan
 
 
