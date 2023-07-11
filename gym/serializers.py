@@ -7,7 +7,7 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 
 from account.models import *
-from account.serializers import TrainerSerializer
+from account.serializers import TrainerSerializer, BaseUserSerializer
 
 from gym.models import TraineePreRegistration, GymTrainee, Gym, City, Province, TrainerInvitation, GymTrainer, \
     MapLocation, \
@@ -94,6 +94,23 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ['trainee', 'rate', 'text']
+
+
+class CreatePlanSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField()
+
+    class Meta:
+        model = Plan
+        fields = ['name', 'user_id', 'trainee', 'time_start', 'time_end', 'price']
+
+    def create(self, validated_data):
+        gym_id = self.context['gym_id']
+        trainees = validated_data.pop('trainee')
+        trainer = Trainer.objects.get(user_id=validated_data.pop('user_id'))
+        plan = Plan.objects.create(gym_id=gym_id, trainer=trainer, **validated_data)
+        for trainee in trainees:
+            plan.trainee.add(trainee.pk)
+        return plan
 
 
 class PlanSerializer(serializers.ModelSerializer):

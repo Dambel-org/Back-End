@@ -1,5 +1,7 @@
 import base64
 import random
+
+import requests
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import CreateAPIView
 from rest_framework import generics
@@ -88,23 +90,29 @@ class ForgotPasswordView(generics.CreateAPIView):
         user.reset_code = code
         user.save()
 
-        subject = 'Password Reset Request'
-        message = f"""
-Hi {user.first_name},
-
-There was a request to change your password!
-
-If you did not make this request then please ignore this email.
-
-
-Otherwise, please back to the website and complete your reset password.
-
-Verification Code : {code}
-        """
-        email_from = settings.EMAIL_HOST_USER
-        recipient_list = [user.email, ]
-        send_mail(subject, message, email_from, recipient_list, fail_silently=True)
-        # send_email(subject, message, recipient_list)
+        #         subject = 'Password Reset Request'
+        #         message = f"""
+        # Hi {user.first_name},
+        #
+        # There was a request to change your password!
+        #
+        # If you did not make this request then please ignore this email.
+        #
+        #
+        # Otherwise, please back to the website and complete your reset password.
+        #
+        # Verification Code : {code}
+        #         """
+        #         email_from = settings.EMAIL_HOST_USER
+        #         recipient_list = [user.email, ]
+        #         send_mail(subject, message, email_from, recipient_list, fail_silently=True)
+        #         # send_email(subject, message, recipient_list)
+        body = {
+            'name': user.first_name,
+            'code': code,
+            'email': user.email
+        }
+        req = requests.post('https://dambel-smtp.vercel.app/api/v1/email/otp', data=body)
         return Response({'detail': 'Email sent successfully!'}, status=status.HTTP_201_CREATED)
 
 
@@ -161,21 +169,26 @@ class VerifyAccountView(APIView):
         user.verify_code = code
         user.save()
 
-        subject = 'Verification Account'
-        message = f"""
-Hi {user.first_name}!
-
-Your verification code is {code}.
-
-Enter this code in our website to activate your account.
-
-We’re glad you’re here!
-Dambel team
-                """
-        email_from = settings.EMAIL_HOST_USER
-        recipient_list = [user.email, ]
-        send_mail(subject, message, email_from, recipient_list, fail_silently=True)
-
+        #         subject = 'Verification Account'
+        #         message = f"""
+        # Hi {user.first_name}!
+        #
+        # Your verification code is {code}.
+        #
+        # Enter this code in our website to activate your account.
+        #
+        # We’re glad you’re here!
+        # Dambel team
+        #                 """
+        #         email_from = settings.EMAIL_HOST_USER
+        #         recipient_list = [user.email, ]
+        #         send_mail(subject, message, email_from, recipient_list, fail_silently=True)
+        body = {
+            'name': user.first_name,
+            'code': code,
+            'email': user.email
+        }
+        req = requests.post('https://dambel-smtp.vercel.app/api/v1/email/otp', data=body)
         return Response({'detail': 'Email sent successfully!'}, status=status.HTTP_201_CREATED)
 
     def post(self, request, *args, **kwargs):

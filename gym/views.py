@@ -161,7 +161,7 @@ class ProvinceDetailView(generics.RetrieveAPIView):
 
 class CreatePlanView(generics.CreateAPIView):
     queryset = Plan.objects.all()
-    serializer_class = PlanSerializer
+    serializer_class = CreatePlanSerializer
     permission_classes = [IsGymOwner]
 
     def get_serializer_context(self):
