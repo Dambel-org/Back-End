@@ -16,3 +16,13 @@ class TraineeAdmin(admin.ModelAdmin):
 @admin.register(GymOwner)
 class TraineeAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(Trainer)
+class TraineeAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(PhoneNumber)
+class TraineeAdmin(admin.ModelAdmin):
+    pass
