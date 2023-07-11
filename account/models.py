@@ -24,6 +24,10 @@ class BaseUser(AbstractUser):
     last_name = models.CharField(max_length=250)
     age = models.IntegerField(null=True)
     email = models.EmailField(max_length=250, unique=True, null=True)
+    reset_code = models.IntegerField(max_length=6, null=True, blank=True)
+    verify_code = models.IntegerField(max_length=6, null=True, blank=True)
+    verified = models.BooleanField(default=False)
+    phone_number = models.CharField(max_length=11, unique=True, default=None, null=True, blank=True)
     objects = BaseUserManager()
     username = None
     REQUIRED_FIELDS = ['first_name', 'last_name', 'age']
@@ -36,7 +40,6 @@ class PhoneNumber(models.Model):
 
 class Trainer(models.Model):
     user = models.OneToOneField(BaseUser, on_delete=models.CASCADE, related_name='trainer')
-    phone_number = models.OneToOneField(PhoneNumber, on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'Trainer'

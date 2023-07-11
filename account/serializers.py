@@ -8,57 +8,65 @@ from rest_framework_simplejwt.settings import api_settings
 from .models import *
 
 
-class BaseUserSerializer(serializers.ModelSerializer):
+class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = BaseUser
-        fields = ('first_name', 'last_name', 'email', 'password')
+        exclude = ["password", ]
+
+
+class BaseUserSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = BaseUser
+        fields = ('id', 'first_name', 'last_name', 'email', 'phone_number', 'password', 'role')
+
+    def get_role(self, obj):
+        user = GymOwner.objects.filter(user=obj)
+        if len(user) == 1:
+            return "GymOwner"
+        user = Trainer.objects.filter(user=obj)
+        if len(user) == 1:
+            return "Trainer"
+        user = Trainee.objects.filter(user=obj)
+        if len(user) == 1:
+            return "Trainee"
 
     def create(self, validated_data):
         user = BaseUser.objects.create_user(**validated_data)
         return user
 
 
-class GymOwnerPhoneNumberSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = GymOwnerPhoneNumber
-        fields = ('number',)
-
-
 class SignupGymOwnerSerializer(serializers.ModelSerializer):
     user = BaseUserSerializer()
-    phone_number = serializers.CharField(max_length=11, write_only=True)
 
     class Meta:
         model = GymOwner
-        fields = ('user', 'phone_number')
+        fields = ('user',)
 
     @transaction.atomic()
     def create(self, validated_data):
         user = validated_data.pop('user')
-        number = validated_data.pop('phone_number')
 
         user = BaseUserSerializer().create(user)
         gym_owner = GymOwner.objects.create(user=user, **validated_data)
-        GymOwnerPhoneNumber.objects.create(gym_owner=gym_owner, number=number)
+        GymOwnerPhoneNumber.objects.create(gym_owner=gym_owner)
         return gym_owner
 
 
 class SignupTraineeSerializer(serializers.ModelSerializer):
     user = BaseUserSerializer()
-    phone_number = serializers.CharField(max_length=11, write_only=True)
 
     class Meta:
         model = Trainee
-        fields = ('user', 'phone_number', 'height', 'weight')
+        fields = ('user', 'height', 'weight')
 
     @transaction.atomic()
     def create(self, validated_data):
         user = validated_data.pop('user')
-        number = validated_data.pop('phone_number')
 
         user = BaseUserSerializer().create(user)
         trainee = Trainee.objects.create(user=user, **validated_data)
-        TraineePhoneNumber.objects.create(trainee=trainee, number=number)
         return trainee
 
 
@@ -70,31 +78,25 @@ class PhoneNumberSerializer(serializers.ModelSerializer):
 
 class SignUpTrainerSerializer(serializers.ModelSerializer):
     user = BaseUserSerializer()
-    phone_number = PhoneNumberSerializer()
 
     class Meta:
         model = Trainer
-        fields = ('user', 'phone_number')
+        fields = ('user',)
 
     @transaction.atomic()
     def create(self, validated_data):
         user = validated_data.pop('user')
-        number = validated_data.pop('phone_number')
-
         user = BaseUserSerializer().create(user)
-        phone_number = PhoneNumberSerializer().create(number)
-
-        trainer = Trainer.objects.create(user=user, phone_number=phone_number)
+        trainer = Trainer.objects.create(user=user)
         return trainer
 
 
 class TrainerSerializer(serializers.ModelSerializer):
     user = BaseUserSerializer()
-    phone_number = PhoneNumberSerializer()
 
     class Meta:
         model = Trainer
-        fields = ('user', 'phone_number')
+        fields = ('id', 'user')
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -107,3 +109,23 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         elif Trainer.objects.filter(user=self.user).exists():
             data['role'] = 'Trainer'
         return data
+
+
+class ForgetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class CheckVerificationCodeSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(max_length=6)
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(max_length=6)
+    pass_1 = serializers.CharField(max_length=30)
+    pass_2 = serializers.CharField(max_length=30)
+
+
+class VerifyAccountSerializer(serializers.Serializer):
+    code = serializers.CharField(max_length=6)
