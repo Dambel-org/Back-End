@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
+from django.core import mail
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from account.models import *
@@ -35,6 +36,11 @@ def signup_trainer_url():
 @pytest.fixture
 def login_url():
     return reverse('login')
+
+
+@pytest.fixture
+def reset_pass():
+    return reverse('reset-pass')
 
 
 @pytest.mark.django_db
@@ -346,3 +352,29 @@ def test_refresh_token_valid(api_client, login_url):
     current_time = datetime.utcnow()
     expiration_time = refresh.payload['exp']
     assert expiration_time > current_time.timestamp()
+
+
+@pytest.mark.django_db
+def test_forgot_password_view(api_client, reset_pass):
+    user = BaseUser.objects.create_user(
+        email='test@example.com',
+        password='test123',
+        first_name='Hamed',
+        last_name='Khosravi',
+        age=20
+    )
+    data = {'email': 'test@example.com'}
+
+    response = api_client.post(reset_pass, data)
+    assert response.status_code == status.HTTP_201_CREATED
+    assert len(mail.outbox) == 1
+
+    email = mail.outbox[0]
+    assert email.subject == 'Password Reset Request'
+    assert email.to == ['test@example.com']
+    assert 'Hi Hamed,' in email.body
+    assert 'Verification Code' in email.body
+
+    user.refresh_from_db()
+    assert user.reset_code is not None
+    assert user.reset_code == int(email.body.split('Verification Code : ')[1].split('\n')[0])
