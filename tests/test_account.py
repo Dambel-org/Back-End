@@ -1,10 +1,13 @@
+from datetime import datetime
+
 import pytest
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from account.models import BaseUser
+from account.models import *
 
 User = get_user_model()
 
@@ -27,6 +30,11 @@ def signup_trainee_url():
 @pytest.fixture
 def signup_trainer_url():
     return reverse('trainer-signup')
+
+
+@pytest.fixture
+def login_url():
+    return reverse('login')
 
 
 @pytest.mark.django_db
@@ -182,7 +190,7 @@ def test_signup_trainee_with_invalid_data(api_client, signup_trainee_url):
 
 @pytest.mark.django_db
 def test_signup_trainer_with_valid_data(api_client, signup_trainer_url):
-    data ={
+    data = {
         'user': {
             'email': 'test@test.com',
             'first_name': 'test',
@@ -251,3 +259,90 @@ def test_signup_trainer_with_invalid_data(api_client, signup_trainer_url):
 
     response = api_client.post(signup_trainer_url, data, format='json')
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+@pytest.mark.django_db
+def test_login_view_with_invalid_credentials(api_client, login_url):
+    BaseUser.objects.create_user(
+        email='test@test.com',
+        first_name='test',
+        last_name='test',
+        age=30,
+        password='testpassword'
+    )
+    data = {
+        'email': 'test@test.com',
+        'password': 'wrongpassword'
+    }
+
+    response = api_client.post(login_url, data, format='json')
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+def login_view_with_role(role, api_client, login_url):
+    user = BaseUser.objects.create_user(
+        email='test@test.com',
+        first_name='test',
+        last_name='test',
+        age=30,
+        password='testpassword'
+    )
+
+    if role == 'GymOwner':
+        GymOwner.objects.create(user=user, license_number='123456789')
+    elif role == 'Trainee':
+        Trainee.objects.create(user=user, height=180, weight=75)
+    elif role == 'Trainer':
+        Trainer.objects.create(user=user)
+
+    data = {
+        'email': 'test@test.com',
+        'password': 'testpassword'
+    }
+
+    response = api_client.post(login_url, data, format='json')
+    assert response.status_code == status.HTTP_200_OK
+    assert 'access' in response.data
+    assert 'refresh' in response.data
+    assert response.data['role'] == role
+
+
+@pytest.mark.django_db
+def test_login_view_with_gym_owner_role(api_client, login_url):
+    login_view_with_role('GymOwner', api_client, login_url)
+
+
+@pytest.mark.django_db
+def test_login_view_with_trainee_role(api_client, login_url):
+    login_view_with_role('Trainee', api_client, login_url,)
+
+
+@pytest.mark.django_db
+def test_login_view_with_trainer_role(api_client, login_url):
+    login_view_with_role('Trainer', api_client, login_url)
+
+
+@pytest.mark.django_db
+def test_refresh_token_valid(api_client, login_url):
+    BaseUser.objects.create_user(
+        email='test@test.com',
+        first_name='test',
+        last_name='test',
+        age=30,
+        password='testpassword'
+    )
+    data = {
+        'email': 'test@test.com',
+        'password': 'testpassword',
+    }
+
+    response = api_client.post(login_url, data, format='json')
+    assert response.status_code == status.HTTP_200_OK
+
+    refresh_token = response.data.get('refresh', None)
+    assert refresh_token is not None
+
+    refresh = RefreshToken(refresh_token)
+    current_time = datetime.utcnow()
+    expiration_time = refresh.payload['exp']
+    assert expiration_time > current_time.timestamp()
