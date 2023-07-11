@@ -43,6 +43,16 @@ def reset_pass():
     return reverse('reset-pass')
 
 
+@pytest.fixture
+def confirm_reset_pass():
+    return reverse('confirm-reset-pass')
+
+
+@pytest.fixture
+def check_code():
+    return reverse('check-code')
+
+
 @pytest.mark.django_db
 def test_api_can_create_a_gym_owner(api_client, signup_gymowner_url):
     data = {
@@ -378,3 +388,29 @@ def test_forgot_password_view(api_client, reset_pass):
     user.refresh_from_db()
     assert user.reset_code is not None
     assert user.reset_code == int(email.body.split('Verification Code : ')[1].split('\n')[0])
+
+
+@pytest.mark.django_db
+def test_reset_password_view(api_client, confirm_reset_pass, login_url):
+    user = BaseUser.objects.create_user(
+        email='test@example.com',
+        password='test123',
+        first_name='Hamed',
+        last_name='Khosravi',
+        age=20
+    )
+    reset_pass_data = {'email': 'test@example.com', 'pass_1': 'admin@33', 'pass_2': 'admin@33'}
+
+    response = api_client.post(confirm_reset_pass, reset_pass_data, format='json')
+    assert response.status_code == status.HTTP_200_OK
+
+    user.refresh_from_db()
+    assert user.reset_code is None
+
+    login_data = {
+        'email': 'test@example.com',
+        'password': 'admin@33',
+    }
+
+    response = api_client.post(login_url, login_data, format='json')
+    assert response.status_code == status.HTTP_200_OK
