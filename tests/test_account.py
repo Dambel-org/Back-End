@@ -178,3 +178,76 @@ def test_signup_trainee_with_invalid_data(api_client, signup_trainee_url):
 
     response = api_client.post(signup_trainee_url, data, format='json')
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+def test_signup_trainer_with_valid_data(api_client, signup_trainer_url):
+    data ={
+        'user': {
+            'email': 'test@test.com',
+            'first_name': 'test',
+            'last_name': 'test',
+            'age': 20,
+            'password': 'test',
+        },
+        'phone_number': {
+            'number': '09123456789',
+        }
+    }
+    response = api_client.post(signup_trainer_url, data, format='json')
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+@pytest.mark.django_db
+def test_signup_trainer_with_missing_required_fields(api_client, signup_trainer_url):
+    data = {
+        'user': {
+            'email': 'test@test.com',
+            'first_name': 'test',
+            'age': 20,
+            'password': 'test',
+        },
+
+    }
+
+    response = api_client.post(signup_trainer_url, data, format='json')
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+def test_signup_trainer_with_existing_email(api_client, signup_trainer_url):
+    data = {
+        'user': {
+            'email': 'test@test.com',
+            'first_name': 'test',
+            'last_name': 'test',
+            'age': 20,
+            'password': 'test',
+        },
+        'phone_number': {
+            'number': '09123456789',
+        }
+    }
+    BaseUser.objects.create_user(
+        email='test@test.com',
+        first_name='nobody',
+        last_name='user',
+        age=30,
+        password='nobodypass',
+    )
+
+    response = api_client.post(signup_trainer_url, data, format='json')
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+def test_signup_trainer_with_invalid_data(api_client, signup_trainer_url):
+    data = {
+        'first_name': 'test',
+        'last_name': 'test',
+        'age': 'twenty-five',
+        'email': 'test@test.com',
+    }
+
+    response = api_client.post(signup_trainer_url, data, format='json')
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
