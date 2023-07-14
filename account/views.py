@@ -112,8 +112,11 @@ class ForgotPasswordView(generics.CreateAPIView):
             'code': code,
             'email': user.email
         }
-        req = requests.post('https://dambel-smtp.vercel.app/api/v1/email/otp', data=body)
-        return Response({'detail': 'Email sent successfully!'}, status=status.HTTP_201_CREATED)
+        req = requests.post('https://dambel-smtp.onrender.com/api/v1/email/reset', data=body)
+        if req.status_code == status.HTTP_201_CREATED:
+            return Response({'detail': 'Email sent successfully!'}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({'detail': 'bad request!'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CheckVerificationCodeView(generics.CreateAPIView):
@@ -188,8 +191,11 @@ class VerifyAccountView(APIView):
             'code': code,
             'email': user.email
         }
-        req = requests.post('https://dambel-smtp.vercel.app/api/v1/email/otp', data=body)
-        return Response({'detail': 'Email sent successfully!'}, status=status.HTTP_201_CREATED)
+        req = requests.post('https://dambel-smtp.onrender.com/api/v1/email/verify', data=body)
+        if req.status_code == status.HTTP_201_CREATED:
+            return Response({'detail': 'Email sent successfully!'}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({'detail': 'bad request!'}, status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request, *args, **kwargs):
         user = self.request.user
