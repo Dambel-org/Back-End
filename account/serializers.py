@@ -50,7 +50,6 @@ class SignupGymOwnerSerializer(serializers.ModelSerializer):
 
         user = BaseUserSerializer().create(user)
         gym_owner = GymOwner.objects.create(user=user, **validated_data)
-        GymOwnerPhoneNumber.objects.create(gym_owner=gym_owner)
         return gym_owner
 
 
